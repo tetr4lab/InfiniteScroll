@@ -415,7 +415,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 30}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &6356645180229327375
 CanvasRenderer:
@@ -555,15 +555,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 028df168040af30419fec19422f89d78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _titleString: 
-  _descriptionString: 
-  _checkBoxLabelString: 
-  _iconSprite: {fileID: 0}
-  _titleText: {fileID: 0}
-  _descriptionText: {fileID: 0}
-  _iconImage: {fileID: 0}
-  _checkBoxToggle: {fileID: 0}
-  _checkBoxLabelText: {fileID: 0}
+  _titleText: {fileID: 6356645180229327368}
+  _descriptionText: {fileID: 6356645180863233687}
+  _iconImage: {fileID: 6356645179846510203}
+  _checkBoxToggle: {fileID: 9172995752756157762}
+  _checkBoxLabelText: {fileID: 8915089528988376379}
 --- !u!1 &6356645180863233681
 GameObject:
   m_ObjectHideFlags: 0

@@ -7,86 +7,56 @@ using InfiniteScroll;
 /// <summary>物理アイテム</summary>
 public class ItemComponent : InfiniteScrollItemComponentBase {
 
-    #region static
     /// <summary>プレハブ</summary>
     private static GameObject prefab = null;
 
     /// <summary>生成</summary>
-    public static ItemComponent Create (Transform parent) {
+    public static new ItemComponent Create (InfiniteScrollRect scrollRect) {
         if (prefab == null) {
             prefab = Resources.Load<GameObject> ("Prefabs/Item");
         }
-        var obj = Instantiate (prefab, parent);
-        return obj.GetComponent<ItemComponent> () ?? obj.AddComponent<ItemComponent> ();
+        var obj = Instantiate (prefab, scrollRect.content);
+        var component = obj.GetComponent<ItemComponent> () ?? obj.AddComponent<ItemComponent> ();
+        component.ScrollRect = scrollRect;
+        component.Initialize ();
+        return component;
     }
-    #endregion
 
-    /// <summary>タイトル</summary>
-    public string Title {
-        get => _titleText ? _titleText.text : "";
-        set {
-            if (_titleText) {
-                _titleText.text = value ?? "";
-            }
+    /// <summary>初期化</summary>
+    protected override void Initialize () {
+        var texts = GetComponentsInChildren<Text> ();
+        if (_titleText == default && texts.Length > 0) {
+            _titleText = texts [0];
+        }
+        if (_descriptionText == default && texts.Length > 1) {
+            _descriptionText = texts [1];
+        }
+        if (_checkBoxLabelText == default && texts.Length > 2) {
+            _checkBoxLabelText = texts [2];
+        }
+        if (_iconImage == default) {
+            _iconImage = GetComponentInChildren<Image> ();
+        }
+        if (_checkBoxToggle == default) {
+            _checkBoxToggle = GetComponentInChildren<Toggle> ();
+        }
+        if (_checkBoxToggle) {
+            _checkBoxToggle.onValueChanged.AddListener (isOn => Item.Check = isOn);
         }
     }
 
-    /// <summary>説明</summary>
-    public string Description {
-        get => _descriptionText ? _descriptionText.text : "";
-        set {
-            if (_descriptionText) {
-                _descriptionText.text = value ?? "";
-            }
-        }
+    /// <summary>論理項目の状態を反映</summary>
+    protected override void Apply () {
+        _titleText.text = Item.Title;
+        _descriptionText.text = Item.Description;
+        _iconImage.sprite = Item.Icon;
+        _checkBoxLabelText.text = Item.Label;
+        _checkBoxToggle.isOn = Item.Check;
+        Item.UpdateRequired = false;
     }
 
-    /// <summary>アイコン</summary>
-    public Sprite Icon {
-        get => _iconImage?.sprite;
-        set {
-            if (_iconImage) {
-                _iconImage.sprite = value;
-            }
-        }
-    }
-
-    /// <summary>チェックボックスの状態</summary>
-    public bool Check {
-        get => _checkBoxToggle?.isOn ?? false;
-        set {
-            if (_checkBoxToggle) {
-                _checkBoxToggle.isOn = value;
-            }
-        }
-    }
-
-
-    /// <summary>チェックボックスのラベル</summary>
-    public string CheckBoxLabel {
-        get => _checkBoxLabelText ? _checkBoxLabelText.text : "";
-        set {
-            if (_checkBoxLabelText) {
-                _checkBoxLabelText.text = value ?? "";
-            }
-        }
-    }
-
-    /// <summary>タイトルの初期状態</summary>
-    [SerializeField]
-    private string _titleString = "";
-
-    /// <summary>説明の初期状態</summary>
-    [SerializeField]
-    private string _descriptionString = "";
-
-    /// <summary>チェックボックスのラベルの初期状態</summary>
-    [SerializeField]
-    private string _checkBoxLabelString = "";
-
-    /// <summary>アイコンの初期状態</summary>
-    [SerializeField]
-    private Sprite _iconSprite = default;
+    /// <summary>リンク中の論理項目</summary>
+    private new Item Item => base.Item as Item;
 
     /// <summary>タイトルテキスト</summary>
     [SerializeField]
@@ -107,32 +77,5 @@ public class ItemComponent : InfiniteScrollItemComponentBase {
     /// <summary>チェックボックスのラベルテキスト</summary>
     [SerializeField]
     private Text _checkBoxLabelText = default;
-
-    /// <summary>初期化</summary>
-    private void Awake () {
-        var texts = GetComponentsInChildren<Text> ();
-        if (_titleText == default && texts.Length > 0) {
-            _titleText = texts [0];
-        }
-        if (_descriptionText == default && texts.Length > 1) {
-            _descriptionText = texts [1];
-        }
-        if (_checkBoxLabelText == default && texts.Length > 2) {
-            _checkBoxLabelText = texts [2];
-        }
-        if (_iconImage == default) {
-            _iconImage = GetComponentInChildren<Image> ();
-        }
-        if (_checkBoxToggle == default) {
-            _checkBoxToggle = GetComponentInChildren<Toggle> ();
-        }
-        if (_checkBoxToggle) {
-            _checkBoxToggle.onValueChanged.AddListener (isOn => (Item as Item).Check = isOn);
-        }
-        Title = _titleString;
-        Description = _descriptionString;
-        Icon = _iconSprite;
-    }
-
 
 }

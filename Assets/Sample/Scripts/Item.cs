@@ -6,46 +6,69 @@ using UnityEngine.UI;
 public class Item : InfiniteScrollItemBase {
 
     /// <summary>タイトル</summary>
-    public string Title { get; protected set; }
+    public string Title {
+        get => _title;
+        protected set {
+            _title = value;
+            UpdateRequired = true;
+        }
+    }
+    private string _title;
 
     /// <summary>説明</summary>
-    public string Description { get; protected set; }
+    public string Description {
+        get => _description;
+        protected set {
+            _description = value;
+            UpdateRequired = true;
+        }
+    }
+    private string _description;
 
     /// <summary>アイコン</summary>
-    public Sprite Icon { get; protected set; }
+    public Sprite Icon {
+        get => _icon;
+        protected set {
+            _icon = value;
+            UpdateRequired = true;
+        }
+    }
+    private Sprite _icon;
 
     /// <summary>チェックボックスのラベル</summary>
-    public string Label { get; protected set; }
+    public string Label {
+        get => _label;
+        protected set {
+            _label = value;
+            UpdateRequired = true;
+        }
+    }
+    private string _label;
 
     /// <summary>チェックボックスの状態</summary>
-    public bool Check { get; set; }
-    
-    /// <summary>サイズ</summary>
-    public override Vector2 Size {
-        get;
-        protected internal set;
+    public bool Check {
+        get => _check;
+        set {
+            _check = value;
+            UpdateRequired = true;
+        }
     }
+    private bool _check;
 
     /// <summary>コンストラクタ</summary>
     public Item (string title = "", string desc = "", Sprite icon = null, string label = "", bool check = false) {
-        Title = title;
-        Description = desc;
-        Icon = icon;
-        Label = label;
+        _title = title;
+        _description = desc;
+        _icon = icon;
+        _label = label;
         Check = check;
     }
 
     /// <summary>実体を生成</summary>
     /// <returns>生成したオブジェクトにアタッチされているコンポーネントを返す</returns>
-    public override InfiniteScrollItemComponentBase Create (Transform parent, InfiniteScrollRect scrollRect) {
-        var component = ItemComponent.Create (parent);
-        component.ScrollRect = scrollRect;
+    public override InfiniteScrollItemComponentBase Create (InfiniteScrollRect scrollRect) {
+        var component = ItemComponent.Create (scrollRect);
         component.Item = this;
-        component.Title = Title;
-        component.Description = Description;
-        component.Icon = Icon;
-        component.CheckBoxLabel = Label;
-        component.Check = Check;
         return component;
     }
 

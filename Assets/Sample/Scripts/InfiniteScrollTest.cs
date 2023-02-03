@@ -1,6 +1,6 @@
-﻿using InfiniteScroll;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using InfiniteScroll;
 
 /// <summary>無限スクロールサンプルメイン</summary>
 public class InfiniteScrollTest : MonoBehaviour {
@@ -18,7 +18,7 @@ public class InfiniteScrollTest : MonoBehaviour {
         for (var i = 0; i < 10 ; i++) {
             _items.Add (new Item ($"No. {i}", $"{i}{new string ('\n', i)}end of {i}", label: $"check {i}"));
         }
-        _scroll.Initialize (_items);
+        _scroll.Initialize (_items, 3);
     }
 
 }
