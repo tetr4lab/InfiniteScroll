@@ -21,6 +21,7 @@ public class Item : InfiniteScrollItemBase {
         protected set {
             _description = value;
             UpdateRequired = true;
+            Verified = false;
         }
     }
     private string _description;
@@ -61,7 +62,7 @@ public class Item : InfiniteScrollItemBase {
         _description = desc;
         _icon = icon;
         _label = label;
-        Check = check;
+        _check = check;
     }
 
     /// <summary>実体を生成</summary>

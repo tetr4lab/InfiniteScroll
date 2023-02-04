@@ -51,6 +51,16 @@ namespace InfiniteScroll {
         /// <summary>スクロール方向のスクロールバー</summary>
         protected virtual Scrollbar _scrollbar => vertical ? verticalScrollbar : horizontalScrollbar;
 
+        /// <summary>更新を要する</summary>
+        public virtual bool UpdateRequired {
+            get => _updateRequired;
+            protected internal set {
+                _updateRequired = value;
+                Debug.Log ($"InfiniteScrollRect.UpdateRequired={value}");
+            }
+        }
+        protected bool _updateRequired;
+
         /// <summary>初期化</summary>
         public virtual void Initialize (IEnumerable<InfiniteScrollItemBase> items, int first = 0) {
             // 消去と整理
@@ -68,6 +78,7 @@ namespace InfiniteScroll {
             for (var i = _firstIndex; i <= _lastIndex; i++) {
                 var component = Items [i].Create (this);
                 Items [i].Size = component.SetSize (m_padding, m_childAlignment, m_controlChildSize, vertical, viewport.rect.size);
+                Debug.Log ($"Items [{i}].Size={Items [i].Size}");
                 Items [i].Verified = true;
                 averageSize += component.Size;
                 _components.Add (component);
@@ -97,33 +108,31 @@ namespace InfiniteScroll {
                 content.pivot = new Vector2 (x, 0.5f);
                 content.offsetMin = new Vector2 (0f, 0f);
             }
-            ContentSize = ItemPosition (Items.Count);
-            var pos = ItemPosition (_firstIndex);
-            var scroll = pos / (ContentSize - viewportSize);
-            //Debug.Log ($"scroll({scroll}) = pos({pos}) / (ContentSize({ContentSize}) - viewportSize({viewportSize}))");
+            CalculateItemPositions ();
+            var scroll = Items [_firstIndex].Position / (ContentSize - viewportSize);
             _scrollbar.value = (vertical == m_reverseArrangement) ? scroll : 1f - scroll;
-            var dir = (vertical == m_reverseArrangement) ? 1f : -1f;
-            pos *= dir;
-            var maxIndex = _lastIndex - _firstIndex;
-            for (var i = 0; i <= maxIndex; i++) {
-                var component = _components [i];
-                component.SetPosition (m_padding, m_spacing, m_childAlignment, m_reverseArrangement, vertical, pos);
-                pos += (component.Size + m_spacing) * dir;
-            }
+            Debug.Log ("inited");
         }
 
-        /// <summary>項目の位置を算出</summary>
+        /// <summary>項目の位置とコンテントサイズを算出</summary>
         /// <param name="index">Items.Countを指定するとContentのサイズを返す</param>
-        public virtual float ItemPosition (int index) {
-            if (index <= 0 || index > Items.Count) { throw new System.ArgumentOutOfRangeException ("index"); }
-            var pos = (m_reverseArrangement ? (vertical ? m_padding.bottom : m_padding.right) : (vertical ? m_padding.top : m_padding.left)) + m_spacing * index;
-            for (var i = 0; i < index; i++) {
-                pos += Items [i].Size;
+        public virtual void CalculateItemPositions () {
+            float pos = m_reverseArrangement ? (vertical ? m_padding.bottom : m_padding.right) : (vertical ? m_padding.top : m_padding.left);
+            for (var i = 0; i < Items.Count; i++) {
+                Items [i].Position = pos;
+                pos += Items [i].Size + m_spacing;
             }
-            if (index == Items.Count) {
-                pos += m_reverseArrangement ? (vertical ? m_padding.top : m_padding.left) : (vertical ? m_padding.bottom : m_padding.right);
+            pos += m_reverseArrangement ? (vertical ? m_padding.top : m_padding.left) : (vertical ? m_padding.bottom : m_padding.right);
+            ContentSize = pos;
+            Debug.Log ($"CalculateItemPositions {string.Join ("\n", Items.ConvertAll (i => $"Position={i.Position}, Size={i.Size}"))}\nContentSize={ContentSize}");
+        }
+
+        /// <summary>更新</summary>
+        private void Update () {
+            if (Items != null && UpdateRequired) {
+                CalculateItemPositions ();
+                UpdateRequired = false;
             }
-            return pos;
         }
 
         /// <summary>破棄</summary>
@@ -132,6 +141,8 @@ namespace InfiniteScroll {
                 foreach (var item in _components) {
                     Destroy (item.gameObject);
                 }
+                _components = null;
+                Items = null;
             }
         }
 
@@ -155,21 +166,32 @@ namespace InfiniteScroll {
             return component;
         }
 
-        /// <summary>スクロール方向のサイズ</summary>
+        /// <summary>スクロール方向の位置 (実態へ反映)</summary>
+        public virtual float Position {
+            get => _position;
+            protected internal set {
+                _position = value;
+                UpdateRequired = true;
+            }
+        }
+        protected float _position = float.MaxValue;
+
+        /// <summary>スクロール方向のサイズ (実体から反映)</summary>
         public virtual float Size { get; protected internal set; }
     
         /// <summary>検証済み (偽ならサイズが実体と一致しない可能性)</summary>
         public virtual bool Verified { get; protected internal set; }
 
-        /// <summary>書き換えがあった</summary>
+        /// <summary>更新を要する</summary>
         public virtual bool UpdateRequired {
             get => _updateRequired;
             protected internal set {
                 _updateRequired = value;
-                Verified = false;
+                Debug.Log ($"Item.UpdateRequired = {value}");
             }
         }
         protected bool _updateRequired;
+
     }
 
     /// <summary>
@@ -223,7 +245,12 @@ namespace InfiniteScroll {
         protected InfiniteScrollItemBase _item;
 
         /// <summary>論理項目の状態を反映</summary>
-        protected virtual void Apply () {  }
+        protected virtual void Apply () {
+            if (Item.Position != float.MaxValue) {
+                SetPosition (ScrollRect.m_padding, ScrollRect.m_spacing, ScrollRect.m_childAlignment, ScrollRect.m_reverseArrangement, ScrollRect.vertical, Item.Position);
+            }
+            Debug.Log ("InfiniteScrollItemComponentBase.Apply");
+        }
 
         /// <summary>更新</summary>
         protected virtual void Update () {
@@ -235,6 +262,7 @@ namespace InfiniteScroll {
                     Item.Size = Size;
                 } else {
                     Item.Verified = true;
+                    ScrollRect.UpdateRequired = true;
                 }
             }
         }
@@ -259,6 +287,7 @@ namespace InfiniteScroll {
 
         /// <summary>項目の位置決め</summary>
         protected internal virtual Vector2 SetPosition (RectOffset padding, float spacing, TextAnchor alignment, bool reverse, bool vertical, float pos) {
+            pos *= (vertical == reverse) ? 1f : -1f;
             Vector2 anchor;
             Vector2 anchoredPosition;
             if (reverse) {
