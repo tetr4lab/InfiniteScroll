@@ -9,8 +9,10 @@ public class Item : InfiniteScrollItemBase {
     public string Title {
         get => _title;
         protected set {
-            _title = value;
-            UpdateRequired = true;
+            if (_title != value) {
+                _title = value;
+                Dirty = true;
+            }
         }
     }
     private string _title;
@@ -19,9 +21,10 @@ public class Item : InfiniteScrollItemBase {
     public string Description {
         get => _description;
         protected set {
-            _description = value;
-            UpdateRequired = true;
-            Verified = false;
+            if (_description != value) {
+                _description = value;
+                Dirty = true;
+            }
         }
     }
     private string _description;
@@ -30,8 +33,10 @@ public class Item : InfiniteScrollItemBase {
     public Sprite Icon {
         get => _icon;
         protected set {
-            _icon = value;
-            UpdateRequired = true;
+            if (_icon != value) {
+                _icon = value;
+                Dirty = true;
+            }
         }
     }
     private Sprite _icon;
@@ -40,8 +45,10 @@ public class Item : InfiniteScrollItemBase {
     public string Label {
         get => _label;
         protected set {
-            _label = value;
-            UpdateRequired = true;
+            if (_label != value) {
+                _label = value;
+                Dirty = true;
+            }
         }
     }
     private string _label;
@@ -50,14 +57,16 @@ public class Item : InfiniteScrollItemBase {
     public bool Check {
         get => _check;
         set {
-            _check = value;
-            UpdateRequired = true;
+            if (_check != value) {
+                _check = value;
+                //Dirty = true;
+            }
         }
     }
     private bool _check;
 
     /// <summary>コンストラクタ</summary>
-    public Item (string title = "", string desc = "", Sprite icon = null, string label = "", bool check = false) {
+    public Item (string title = "", string desc = "", Sprite icon = null, string label = "", bool check = false) : base () {
         _title = title;
         _description = desc;
         _icon = icon;
@@ -67,10 +76,6 @@ public class Item : InfiniteScrollItemBase {
 
     /// <summary>実体を生成</summary>
     /// <returns>生成したオブジェクトにアタッチされているコンポーネントを返す</returns>
-    public override InfiniteScrollItemComponentBase Create (InfiniteScrollRect scrollRect) {
-        var component = ItemComponent.Create (scrollRect);
-        component.Item = this;
-        return component;
-    }
+    public override InfiniteScrollItemComponentBase Create (InfiniteScrollRect scrollRect, int index) => ItemComponent.Create (scrollRect, index);
 
 }

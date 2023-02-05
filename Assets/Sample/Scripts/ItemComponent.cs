@@ -11,13 +11,14 @@ public class ItemComponent : InfiniteScrollItemComponentBase {
     private static GameObject prefab = null;
 
     /// <summary>生成</summary>
-    public static new ItemComponent Create (InfiniteScrollRect scrollRect) {
+    public static new ItemComponent Create (InfiniteScrollRect scrollRect, int index) {
         if (prefab == null) {
             prefab = Resources.Load<GameObject> ("Prefabs/Item");
         }
         var obj = Instantiate (prefab, scrollRect.content);
         var component = obj.GetComponent<ItemComponent> () ?? obj.AddComponent<ItemComponent> ();
         component.ScrollRect = scrollRect;
+        component.Index = index;
         component.Initialize ();
         return component;
     }
@@ -47,17 +48,20 @@ public class ItemComponent : InfiniteScrollItemComponentBase {
 
     /// <summary>論理項目の状態を反映</summary>
     protected override void Apply () {
-        base.Apply ();
         _titleText.text = Item.Title;
         _descriptionText.text = Item.Description;
         _iconImage.sprite = Item.Icon;
         _checkBoxLabelText.text = Item.Label;
         _checkBoxToggle.isOn = Item.Check;
-        Item.UpdateRequired = false;
+        base.Apply ();
+        // 乱数をサイズに反映
+        if (int.TryParse (Item.Description.Split ('\n')[0], out var size)) {
+            RectTransform.sizeDelta = ScrollRect.vertical ? new Vector2 (RectTransform.sizeDelta.x, size) : new Vector2 (size, RectTransform.sizeDelta.y);
+        }
     }
 
     /// <summary>リンク中の論理項目</summary>
-    private new Item Item => base.Item as Item;
+    public new Item Item => ScrollRect.Items [_index] as Item;
 
     /// <summary>タイトルテキスト</summary>
     [SerializeField]
