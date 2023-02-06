@@ -29,12 +29,36 @@ public class InfiniteScrollTest : MonoBehaviour {
     [SerializeField]
     private Toggle _ctrlSizeToggle = default;
 
+    /// <summary>リセットボタン</summary>
+    [SerializeField]
+    private Button _resetButton = default;
+
+    /// <summary>レポートボタン</summary>
+    [SerializeField]
+    private Button _reportButton = default;
+
     /// <summary>論理項目リスト</summary>
     private List<Item> _items;
 
     /// <summary>初期化</summary>
     private void Start () {
         _items = new List<Item> ();
+        _scroll ??= transform.parent.GetComponentInChildren<InfiniteScrollRect> ();
+        var toggles = GetComponentsInChildren<Toggle> ();
+        _randomToggle ??= toggles.GetNth (0);
+        _verticalToggle ??= toggles.GetNth (1);
+        _reverseToggle ??= toggles.GetNth (2);
+        _ctrlSizeToggle ??= toggles.GetNth (3);
+        _ctrlSizeToggle?.onValueChanged.AddListener (isOn => { if (_alignDropdown) { _alignDropdown.interactable = !isOn; } });
+        _alignDropdown ??= GetComponentInChildren<Dropdown> ();
+        var buttons = GetComponentsInChildren<Button> ();
+        _resetButton ??= buttons.GetNth (0);
+        _resetButton?.onClick.AddListener (OnReset);
+        _reportButton ??= buttons.GetNth (1);
+        _reportButton?.onClick.AddListener (() => {
+            Debug.Log ($"Checks: {string.Join (", ", _scroll.Items.ConvertAll (i => $"{(i as Item).Title}: {(i as Item).Check}"))}");
+        });
+        
         OnReset ();
     }
 
@@ -52,9 +76,9 @@ public class InfiniteScrollTest : MonoBehaviour {
         _scroll.Initialize (_items, 3);
     }
 
-    /// <summary>レポートボタン</summary>
-    public void OnReport () {
-        Debug.Log ($"Checks: {string.Join (", ", _scroll.Items.ConvertAll (i => $"{(i as Item).Title}: {(i as Item).Check}"))}");
-    }
+}
 
+/// <summary>配列ヘルパー</summary>
+public static class ArrayHelper {
+    public static T GetNth<T> (this T [] items, int index) where T : class => index < 0 || index >= items.Length ? (T) null : items [index];
 }

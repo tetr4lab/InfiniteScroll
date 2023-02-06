@@ -1300,19 +1300,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 439462728}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 683904994}
-        m_TargetAssemblyTypeName: InfiniteScrollTest, Assembly-CSharp
-        m_MethodName: OnReset
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &439462728
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1853,12 +1841,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 967cd1c3c756f3a4ea81ca2d6231caac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _scroll: {fileID: 103020197}
-  _randomToggle: {fileID: 665924170}
-  _verticalToggle: {fileID: 682770309}
-  _reverseToggle: {fileID: 759738502}
-  _alignDropdown: {fileID: 390763661}
-  _ctrlSizeToggle: {fileID: 1321788107}
+  _scroll: {fileID: 0}
+  _randomToggle: {fileID: 0}
+  _verticalToggle: {fileID: 0}
+  _reverseToggle: {fileID: 0}
+  _alignDropdown: {fileID: 0}
+  _ctrlSizeToggle: {fileID: 0}
+  _resetButton: {fileID: 0}
+  _reportButton: {fileID: 0}
 --- !u!114 &683904995
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3922,19 +3912,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2076229313}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 683904994}
-        m_TargetAssemblyTypeName: InfiniteScrollTest, Assembly-CSharp
-        m_MethodName: OnReport
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &2076229313
 MonoBehaviour:
   m_ObjectHideFlags: 0
