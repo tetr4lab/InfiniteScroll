@@ -120,11 +120,29 @@ namespace InfiniteScroll {
             Debug.Log ($"Initialized: viewport={viewport.rect.size}, content={content.rect.size}, first={_firstIndex}, last={_lastIndex}, Scroll={Scroll}");
         }
 
+        /// <summary>スクロール位置を記録</summary>
+        public virtual void LockScroll (int index = -1) {
+            // thread-unsafe
+            if (index < 0 || index > Items.Count) {
+                index = (_firstIndex + _lastIndex) / 2;
+            }
+            _lockedOffset = GetScrollOffset (_lockedIndex = index);
+            Debug.Log ($"ScrollLocked Item [{_lockedIndex}] offset={_lockedOffset}");
+        }
+        protected int _lockedIndex;
+        protected float _lockedOffset;
+
         /// <summary>項目へスクロール</summary>
         /// <param name="index">項目のインデックス</param>
         /// <param name="offset">項目内のオフセット</param>
-        protected virtual void SetScroll (int index, float offset = 0) {
+        public virtual void SetScroll (int index = -1, float offset = 0) {
+            if (index < 0 || index > Items.Count) {
+                // thread-unsafe
+                index = _lockedIndex;
+                offset = _lockedOffset;
+            }
             var scroll = (Items [index].Position + offset) / (ContentSize - ViewportSize);
+            Debug.Log ($"SetScroll Item [{index}] offset={offset}, Scroll={Scroll} => {((vertical == m_reverseArrangement) ? scroll : 1f - scroll)} ({scroll})");
             Scroll = (vertical == m_reverseArrangement) ? scroll : 1f - scroll;
         }
 
@@ -132,15 +150,14 @@ namespace InfiniteScroll {
         /// <param name="index">項目のインデックス</param>
         /// <returns>オフセット</returns>
         protected virtual float GetScrollOffset (int index) {
-            var scroll = Items [index].Position / (ContentSize - ViewportSize);
-            return ((vertical == m_reverseArrangement ? scroll : 1f - scroll) - Scroll) * (ContentSize - ViewportSize);
+            var offset = (vertical == m_reverseArrangement ? Scroll : 1f - Scroll) * (ContentSize - ViewportSize);
+            Debug.Log ($"Scroll.Offset={offset} - Item [{index}].Position={Items [index].Position} ={offset - Items [index].Position}");
+            return offset - Items [index].Position;
         }
 
         /// <summary>項目の位置とコンテントサイズを算出</summary>
         /// <param name="index">Items.Countを指定するとContentのサイズを返す</param>
         public virtual void CalculatePositions () {
-            var index = (_firstIndex + _lastIndex) / 2;
-            var offset = GetScrollOffset (index);
             foreach (var component in _components) {
                 if (component.Index >= 0 && component.Size != component.Item.Size) {
                     component.SetSize ();
@@ -159,7 +176,6 @@ namespace InfiniteScroll {
                     component.SetPosition (component.Item.Position);
                 }
             }
-            SetScroll (index, offset);
         }
 
         /// <summary>項目の生成</summary>
@@ -174,6 +190,7 @@ namespace InfiniteScroll {
         /// <summary>論理アイテムを反映する</summary>
         protected virtual void ApplyItems (int first, int last) {
             Debug.Log ($"ApplyItems: ({_firstIndex}, {_lastIndex}) => ({first}, {last}), ContentSize={ContentSize}, Scroll={Scroll}");
+            LockScroll ();
             // 解放
             _components.ForEach (c => { if (c.Index < first || c.Index > last) { c.Index = -1; } });
             // 割当
@@ -194,6 +211,7 @@ namespace InfiniteScroll {
                     Debug.Log ($"ApplyItems: Exist Items [{i}].Size={Items [i].Size}, first={first}, last={last}, ViewportSize={ViewportSize}");
                 }
             }
+            SetScroll ();
             _firstIndex = first;
             _lastIndex = last;
         }
@@ -324,8 +342,8 @@ namespace InfiniteScroll {
         /// <summary>スクロールの向き 垂直/!水平</summary>
         protected virtual bool vertical => ScrollRect.vertical;
 
-        /// <summary>ビューポートのサイズ</summary>
-        protected virtual Vector2 viewportSize => ScrollRect.viewport.rect.size;
+        /// <summary>ビューポート矩形</summary>
+        protected virtual Rect viewportRect => ScrollRect.viewport.rect;
 
         /// <summary>レクトトランスフォーム</summary>
         public virtual RectTransform RectTransform => _rectTransform ?? transform as RectTransform ?? gameObject.AddComponent<RectTransform> ();
@@ -363,23 +381,25 @@ namespace InfiniteScroll {
                     Apply ();
                 }
                 if (Item.Size != Size) {
+                    ScrollRect.LockScroll ();
                     Item.Size = Size;
                     ScrollRect.CalculatePositions ();
+                    ScrollRect.SetScroll ();
                 }
             }
         }
 
         /// <summary>項目のサイズ決め</summary>
         protected internal virtual void SetSize () {
-            var controledSize = vertical ? viewportSize.x - m_padding.left - m_padding.right : viewportSize.y - m_padding.top - m_padding.bottom;
-            RectTransform.sizeDelta = new Vector2 (
-                (!vertical || !m_controlChildSize) ? RectTransform.sizeDelta.x : controledSize,
-                (vertical && m_controlChildSize) ? controledSize : RectTransform.sizeDelta.y
-            );
+            if (m_controlChildSize) {
+                RectTransform.sizeDelta = vertical
+                    ? new Vector2 (viewportRect.size.x - m_padding.left - m_padding.right, RectTransform.sizeDelta.y)
+                    : new Vector2 (RectTransform.sizeDelta.x, viewportRect.size.y - m_padding.top - m_padding.bottom);
+            }
             for (var i = 0; i < MaxNumberOfLayoutRebuilds; i++) {
                 var lastSize = Size;
                 LayoutRebuilder.ForceRebuildLayoutImmediate (RectTransform);
-                Debug.Log ($"Item [{Index}].SetSize({i}) {lastSize} => {Size}: controlSize={m_controlChildSize}, controledSize={controledSize}, viewportSize={viewportSize}, localPosition={RectTransform.localPosition}, sizeDelta{RectTransform.sizeDelta}");
+                Debug.Log ($"Item [{Index}].SetSize({i}) {lastSize} => {Size}: controlSize={m_controlChildSize}, localPosition={RectTransform.localPosition}, sizeDelta{RectTransform.sizeDelta}");
                 if (Mathf.Approximately (lastSize, Size)) {
                     break;
                 }
