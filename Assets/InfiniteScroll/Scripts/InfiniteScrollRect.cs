@@ -34,7 +34,7 @@ namespace InfiniteScroll {
         public bool m_controlChildSize = false;
 
         /// <summary>有効</summary>
-        public virtual bool Valid => _items != null && _components != null && FirstIndex >= 0;
+        public virtual bool Valid => _items != null && _components != null;
 
         /// <summary>論理項目リストへのアクセス</summary>
         public virtual ReadOnlyCollection<InfiniteScrollItemBase> AsReadOnly () => _items.AsReadOnly ();
@@ -49,7 +49,7 @@ namespace InfiniteScroll {
         public virtual InfiniteScrollItemBase this [int index] => _items [index];
 
         /// <summary>論理項目数</summary>
-        public virtual int Count => _items != null ? _items.Count : 0;
+        public virtual int Count => Valid ? _items.Count : 0;
 
         /// <summary>論理項目リスト</summary>
         protected virtual List<InfiniteScrollItemBase> _items { get; set; }
@@ -88,14 +88,19 @@ namespace InfiniteScroll {
         }
 
         /// <summary>クリア</summary>
-        public virtual void Clear () {
+        public virtual void Clear (bool hard = false) {
             foreach (RectTransform t in content) {
                 Destroy (t.gameObject);
             }
-            _items = null;
-            _components = null;
+            if (hard) {
+                _items = null;
+                _components = null;
+            } else {
+                _items?.Clear ();
+                _components?.Clear ();
+            }
             FirstIndex = LastIndex = -1;
-            Debug.Log ($"{content.sizeDelta}, {viewport.rect.size}");
+            Debug.Log ($"hard={hard} {content.sizeDelta}, {viewport.rect.size}");
             content.sizeDelta = Vector2.zero;
         }
 
@@ -129,7 +134,7 @@ namespace InfiniteScroll {
         public virtual void Initialize (IEnumerable<InfiniteScrollItemBase> items, int index = 0) {
             if (items == null) { throw new ArgumentNullException ("items"); }
             // 抹消
-            Clear ();
+            Clear (true);
             LayoutRebuilder.ForceRebuildLayoutImmediate (transform as RectTransform);
             // 生成
             _items = new List<InfiniteScrollItemBase> (items);
@@ -332,7 +337,7 @@ namespace InfiniteScroll {
         }
 
         /// <summary>破棄</summary>
-        protected override void OnDestroy () => Clear ();
+        protected override void OnDestroy () => Clear (true);
 
     }
 
@@ -424,7 +429,7 @@ namespace InfiniteScroll {
         protected virtual Rect viewportRect => ScrollRect.viewport.rect;
 
         /// <summary>レクトトランスフォーム</summary>
-        public virtual RectTransform RectTransform => _rectTransform ?? transform as RectTransform ?? gameObject.AddComponent<RectTransform> ();
+        protected virtual RectTransform RectTransform => _rectTransform ?? transform as RectTransform ?? gameObject.AddComponent<RectTransform> ();
         protected RectTransform _rectTransform;
 
         /// <summary>サイズ</summary>
