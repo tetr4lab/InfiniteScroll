@@ -57,7 +57,7 @@ namespace InfiniteScroll {
 
         /// <summary>インスペクタ用</summary>
         public override void OnInspectorGUI () {
-            DrawDefaultInspector ();
+            base.OnInspectorGUI ();
             var component = (InfiniteScrollRect) target;
             if (component.horizontal == component.vertical) {
                 // トグルが変更されたら前回と逆にする (垂直と水平のトグルをラジオボタン化)
@@ -66,6 +66,21 @@ namespace InfiniteScroll {
             }
             // 最後の状態を記録
             _lastVertical = component.vertical;
+            // 追加項目
+            PaddingFoldoutToggle = EditorGUILayout.BeginFoldoutHeaderGroup (PaddingFoldoutToggle, "Padding");
+            if (PaddingFoldoutToggle) {
+                EditorGUI.indentLevel++;
+                component.m_padding.left = EditorGUILayout.IntField ("Left", component.m_padding.left);
+                component.m_padding.right = EditorGUILayout.IntField ("Right", component.m_padding.right);
+                component.m_padding.top = EditorGUILayout.IntField ("Top", component.m_padding.top);
+                component.m_padding.bottom = EditorGUILayout.IntField ("Bottom", component.m_padding.bottom);
+                EditorGUI.indentLevel--;
+            }
+            EditorGUILayout.EndFoldoutHeaderGroup ();
+            component.m_spacing = EditorGUILayout.FloatField ("Spacing", component.m_spacing);
+            component.m_childAlignment = (TextAnchor) EditorGUILayout.EnumPopup ("Child Alignment", component.m_childAlignment);
+            component.m_reverseArrangement = EditorGUILayout.Toggle ("Reverse Arrangement", component.m_reverseArrangement);
+            component.m_controlChildSize = EditorGUILayout.Toggle ("Control Child Size", component.m_controlChildSize);
         }
 
     }
