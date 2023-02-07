@@ -135,6 +135,9 @@ public class InfiniteScrollTest : MonoBehaviour {
                 _removeButtonLabel.text = _scroll.Count > 0 ? $"Remove {index}" : "Remove";
                 _removeButton.interactable = _scroll.Count > 0;
             }
+            if (_clearButton) {
+                _clearButton.interactable = _scroll.Count > 0;
+            }
         }
     }
 
