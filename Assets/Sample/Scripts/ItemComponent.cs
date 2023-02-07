@@ -61,7 +61,7 @@ public class ItemComponent : InfiniteScrollItemComponentBase {
     }
 
     /// <summary>リンク中の論理項目</summary>
-    public new Item Item => ScrollRect.Items [_index] as Item;
+    public new Item Item => ScrollRect [_index] as Item;
 
     /// <summary>タイトルテキスト</summary>
     [SerializeField]

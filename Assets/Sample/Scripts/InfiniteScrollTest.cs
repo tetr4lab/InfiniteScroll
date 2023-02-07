@@ -63,6 +63,10 @@ public class InfiniteScrollTest : MonoBehaviour {
     /// <summary>抹消ボタンのラベル</summary>
     private Text _removeButtonLabel;
 
+    /// <summary>抹消ボタン</summary>
+    [SerializeField]
+    private Button _clearButton = default;
+
     /// <summary>論理項目リスト</summary>
     private List<Item> _items;
 
@@ -82,7 +86,7 @@ public class InfiniteScrollTest : MonoBehaviour {
         _resetButton?.onClick.AddListener (OnReset);
         _reportButton ??= buttons.GetNth (1);
         _reportButton?.onClick.AddListener (() => {
-            Debug.Log ($"Checks: {string.Join (", ", _scroll.Items.ConvertAll (i => $"{(i as Item).Title}: {(i as Item).Check}"))}");
+            Debug.Log ($"Checks: {string.Join (", ", _scroll.ConvertAll (i => $"{(i as Item).Title}: {(i as Item).Check}"))}");
         });
         _indexSlider ??= GetComponentInChildren<Slider> ();
         _addButton ??= buttons.GetNth (2);
@@ -108,26 +112,28 @@ public class InfiniteScrollTest : MonoBehaviour {
             var index = Mathf.RoundToInt (_indexSlider.value);
             items.RemoveAt (index);
         }));
+        _clearButton ??= buttons.GetNth (5);
+        _clearButton?.onClick.AddListener (() => _scroll.Clear ());
 
         OnReset ();
     }
 
     /// <summary>更新</summary>
     private void Update () {
-        if (_scroll.Items != null) {
+        if (_scroll.Valid) {
             if (_indexSlider) {
-                _indexSlider.maxValue = _scroll.Items.Count > 0 ? _scroll.Items.Count - 1 : 0;
+                _indexSlider.maxValue = _scroll.Count > 0 ? _scroll.Count - 1 : 0;
             }
             if (_addButtonLabel) {
-                _addButtonLabel.text = $"Add {_scroll.Items.Count}";
+                _addButtonLabel.text = $"Add {_scroll.Count}";
             }
             var index = _indexSlider ? Mathf.RoundToInt (_indexSlider.value) : (_scroll.FirstIndex + _scroll.LastIndex) / 2;
             if (_insertButtonLabel) {
                 _insertButtonLabel.text = $"Insert {(index >= 0 ? index : 0)}";
             }
             if (_removeButtonLabel) {
-                _removeButtonLabel.text = _scroll.Items.Count > 0 ? $"Remove {index}" : "Remove";
-                _removeButton.interactable = _scroll.Items.Count > 0;
+                _removeButtonLabel.text = _scroll.Count > 0 ? $"Remove {index}" : "Remove";
+                _removeButton.interactable = _scroll.Count > 0;
             }
         }
     }

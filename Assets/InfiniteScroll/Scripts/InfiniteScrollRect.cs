@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -32,10 +33,28 @@ namespace InfiniteScroll {
         [SerializeField]
         public bool m_controlChildSize = false;
 
-        /// <summary>論理項目</summary>
-        public virtual List<InfiniteScrollItemBase> Items { get; protected set; }
+        /// <summary>有効</summary>
+        public virtual bool Valid => _items != null && _components != null && FirstIndex >= 0;
 
-        /// <summary>実体項目</summary>
+        /// <summary>論理項目リストへのアクセス</summary>
+        public virtual ReadOnlyCollection<InfiniteScrollItemBase> AsReadOnly () => _items.AsReadOnly ();
+
+        /// <summary>論理項目の絞り込み</summary>
+        public virtual List<InfiniteScrollItemBase> FindAll (Predicate<InfiniteScrollItemBase> match) => _items.FindAll (match);
+
+        /// <summary>論理項目リストの変換</summary>
+        public virtual List<TOutput> ConvertAll<TOutput> (Converter<InfiniteScrollItemBase, TOutput> converter) => _items.ConvertAll (converter);
+
+        /// <summary>論理項目へのアクセス</summary>
+        public virtual InfiniteScrollItemBase this [int index] => _items [index];
+
+        /// <summary>論理項目数</summary>
+        public virtual int Count => _items != null ? _items.Count : 0;
+
+        /// <summary>論理項目リスト</summary>
+        protected virtual List<InfiniteScrollItemBase> _items { get; set; }
+
+        /// <summary>実体項目リスト</summary>
         protected virtual List<InfiniteScrollItemComponentBase> _components { get; set; }
 
         /// <summary>更新停止</summary>
@@ -73,10 +92,11 @@ namespace InfiniteScroll {
             foreach (RectTransform t in content) {
                 Destroy (t.gameObject);
             }
-            Items = null;
+            _items = null;
             _components = null;
             FirstIndex = LastIndex = -1;
-            content.sizeDelta = viewport.rect.size;
+            Debug.Log ($"{content.sizeDelta}, {viewport.rect.size}");
+            content.sizeDelta = Vector2.zero;
         }
 
         /// <summary>アイテムの更新</summary>
@@ -85,11 +105,11 @@ namespace InfiniteScroll {
             LockUpdate = true;
             var locked = LockScroll ();
             var first = locked.index;
-            var item = Items.Count > 0 ? Items [locked.index] : null;
-            Debug.Log ($"Modify [{Items.Count}]: index={locked.index}, FirstIndex={FirstIndex}, LastIndex={LastIndex}");
-            action (this, Items, FirstIndex, LastIndex);
+            var item = _items.Count > 0 ? _items [locked.index] : null;
+            Debug.Log ($"Modify [{_items.Count}]: index={locked.index}, FirstIndex={FirstIndex}, LastIndex={LastIndex}");
+            action (this, _items, FirstIndex, LastIndex);
             if (item != null) {
-                locked.index = Items.IndexOf (item);
+                locked.index = _items.IndexOf (item);
             }
             if (item != null && locked.index >= 0) {
                 FirstIndex = first;
@@ -106,18 +126,20 @@ namespace InfiniteScroll {
         }
 
         /// <summary>初期化</summary>
-        public virtual void Initialize (IEnumerable<InfiniteScrollItemBase> items, int first = 0) {
+        public virtual void Initialize (IEnumerable<InfiniteScrollItemBase> items, int index = 0) {
+            if (items == null) { throw new ArgumentNullException ("items"); }
             // 抹消
             Clear ();
             LayoutRebuilder.ForceRebuildLayoutImmediate (transform as RectTransform);
             // 生成
-            Items = new List<InfiniteScrollItemBase> (items);
+            _items = new List<InfiniteScrollItemBase> (items);
+            if (index < 0 || index > _items.Count) { throw new ArgumentOutOfRangeException ("index"); }
             _components = new List<InfiniteScrollItemComponentBase> ();
             // 生成
             var sumSize = 0f + (m_reverseArrangement ? (vertical ? m_padding.bottom : m_padding.right) : (vertical ? m_padding.top : m_padding.left));
-            FirstIndex = first; // 可視範囲の開始
-            LastIndex = Items.Count - 1;
-            for (var i = first; i <= LastIndex; i++) {
+            FirstIndex = index; // 可視範囲の開始
+            LastIndex = _items.Count - 1;
+            for (var i = index; i <= LastIndex; i++) {
                 sumSize += CreateItem (i).Size + m_spacing;
                 if (sumSize > ViewportSize) {
                     // 可視端への到達
@@ -129,10 +151,10 @@ namespace InfiniteScroll {
             _components.ForEach (c => averageSize += c.Size);
             averageSize /= (LastIndex - FirstIndex + 1);
             for (var i = 0; i < FirstIndex; i++) {
-                Items [i].Size = averageSize;
+                _items [i].Size = averageSize;
             }
-            for (var i = LastIndex + 1; i < Items.Count; i++) {
-                Items [i].Size = averageSize;
+            for (var i = LastIndex + 1; i < _items.Count; i++) {
+                _items [i].Size = averageSize;
             }
             // 配置
             if (vertical) {
@@ -173,27 +195,27 @@ namespace InfiniteScroll {
                 return;
             }
             var scroll = (item.Position + offset) / (ContentSize - ViewportSize);
-            Debug.Log ($"SetScroll Item [{Items.IndexOf (item)}] offset={offset}, Scroll={Scroll} => {((vertical == m_reverseArrangement) ? scroll : 1f - scroll)} ({scroll})");
+            Debug.Log ($"SetScroll Item [{_items.IndexOf (item)}] offset={offset}, Scroll={Scroll} => {((vertical == m_reverseArrangement) ? scroll : 1f - scroll)} ({scroll})");
             Scroll = (vertical == m_reverseArrangement) ? scroll : 1f - scroll;
         }
 
         /// <summary>項目へスクロール</summary>
         /// <param name="index">基準項目のインデックス</param>
         /// <param name="offset">基準項目からのオフセット</param>
-        public virtual void SetScroll (int index, float offset = 0) => SetScroll (Items.Count <= 0 ? null : Items [index], offset);
+        public virtual void SetScroll (int index, float offset = 0) => SetScroll (_items.Count <= 0 ? null : _items [index], offset);
 
         /// <summary>項目へスクロール</summary>
         /// <param name="point">基準項目のインデックスとオフセット</param>
-        public virtual void SetScroll ((int index, float offset) point) => SetScroll (Items.Count <= 0 ? null : Items [point.index], point.offset);
+        public virtual void SetScroll ((int index, float offset) point) => SetScroll (_items.Count <= 0 ? null : _items [point.index], point.offset);
 
         /// <summary>現在のスクロール位置に対する項目からのオフセットを得る</summary>
         /// <param name="index">項目のインデックス</param>
         /// <returns>オフセット</returns>
         protected virtual float GetScrollOffset (int index) {
-            if (Items.Count <= 0) { return 0f; }
+            if (_items.Count <= 0) { return 0f; }
             var offset = ContentSize < ViewportSize ? 0f : (vertical == m_reverseArrangement ? Scroll : 1f - Scroll) * (ContentSize - ViewportSize);
-            Debug.Log ($"Scroll.Offset={offset} - Items [{index}].Position={Items [index].Position} ={offset - Items [index].Position}, Scroll={Scroll}, ScrollableSize={ContentSize - ViewportSize}");
-            return offset - Items [index].Position;
+            Debug.Log ($"Scroll.Offset={offset} - Items [{index}].Position={_items [index].Position} ={offset - _items [index].Position}, Scroll={Scroll}, ScrollableSize={ContentSize - ViewportSize}");
+            return offset - _items [index].Position;
         }
 
         /// <summary>項目の位置とコンテントサイズを算出</summary>
@@ -205,12 +227,12 @@ namespace InfiniteScroll {
                 }
             }
             float pos = m_reverseArrangement ? (vertical ? m_padding.bottom : m_padding.right) : (vertical ? m_padding.top : m_padding.left);
-            for (var i = 0; i < Items.Count; i++) {
-                Items [i].Position = pos;
-                pos += Items [i].Size + m_spacing;
+            for (var i = 0; i < _items.Count; i++) {
+                _items [i].Position = pos;
+                pos += _items [i].Size + m_spacing;
             }
             pos += m_reverseArrangement ? (vertical ? m_padding.top : m_padding.left) : (vertical ? m_padding.bottom : m_padding.right);
-            Debug.Log ($"ContentSize: {ContentSize} => {pos}\nCalculateItemPositions:\n{string.Join ("\n", Items.ConvertAll (i => $"Position={i.Position}, Size={i.Size}"))}");
+            Debug.Log ($"ContentSize: {ContentSize} => {pos}\nCalculateItemPositions:\n{string.Join ("\n", _items.ConvertAll (i => $"Position={i.Position}, Size={i.Size}"))}");
             ContentSize = pos;
             foreach (var component in _components) {
                 if (component.Index >= 0) {
@@ -221,10 +243,10 @@ namespace InfiniteScroll {
 
         /// <summary>物理項目の生成</summary>
         protected virtual InfiniteScrollItemComponentBase CreateItem (int index) {
-            var component = Items [index].Create (this, index);
+            var component = _items [index].Create (this, index);
             component.SetSize ();
             _components.Add (component);
-            Debug.Log ($"ApplyItems: New Items [{index}].Size={Items [index].Size}");
+            Debug.Log ($"ApplyItems: New Items [{index}].Size={_items [index].Size}");
             return component;
         }
 
@@ -240,7 +262,7 @@ namespace InfiniteScroll {
         protected virtual void ApplyItems (int first, int last = -1) {
             var forceClear = FirstIndex == first && LastIndex == last || last < 0;
             var rebuild = last < 0;
-            if (rebuild) { last = Items.Count - 1; }
+            if (rebuild) { last = _items.Count - 1; }
             Debug.Log ($"ApplyItems: ({FirstIndex}, {LastIndex}) {(forceClear ? "clear " : "")}=> ({first}, {last}), ContentSize={ContentSize}, Scroll={Scroll}");
             // 解放
             Release (first, last, forceClear);
@@ -253,17 +275,17 @@ namespace InfiniteScroll {
                     if (component != null) {
                         // 再利用
                         component.Index = i;
-                        Debug.Log ($"ApplyItems: Reuse Items [{i}].Size={Items [i].Size}, first={first}, last={last}, ViewportSize={ViewportSize}");
+                        Debug.Log ($"ApplyItems: Reuse Items [{i}].Size={_items [i].Size}, first={first}, last={last}, ViewportSize={ViewportSize}");
                     } else {
                         // 新規
                         component = CreateItem (i);
                         CalculatePositions ();
                     }
                 } else {
-                    Debug.Log ($"ApplyItems: Exist Items [{i}].Size={Items [i].Size}, first={first}, last={last}, ViewportSize={ViewportSize}");
+                    Debug.Log ($"ApplyItems: Exist Items [{i}].Size={_items [i].Size}, first={first}, last={last}, ViewportSize={ViewportSize}");
                 }
                 if (rebuild) {
-                    pos += Items [i].Size + m_spacing;
+                    pos += _items [i].Size + m_spacing;
                     Debug.Log ($"ApplyItems [{i}]: pos={pos} {(pos > ViewportSize ? ">" : "<=")} ViewportSize={ViewportSize}");
                     if (pos > ViewportSize) {
                         // 可視端への到達
@@ -283,8 +305,8 @@ namespace InfiniteScroll {
             var bottom = top + ViewportSize;
             var first = -1;
             var last = -1;
-            for (var i = 0; i < Items.Count; i++) {
-                if ((Items [i].Position + Items[i].Size) >= top && Items [i].Position <= bottom) {
+            for (var i = 0; i < _items.Count; i++) {
+                if ((_items [i].Position + _items[i].Size) >= top && _items [i].Position <= bottom) {
                     last = i;
                     if (first < 0) {
                         first = i;
@@ -425,7 +447,7 @@ namespace InfiniteScroll {
         protected int _index;
 
         /// <summary>リンク中の論理項目</summary>
-        public virtual InfiniteScrollItemBase Item => (_index < 0 || _index >= ScrollRect.Items.Count) ? null : ScrollRect.Items [_index];
+        public virtual InfiniteScrollItemBase Item => (_index < 0 || _index >= ScrollRect.Count) ? null : ScrollRect [_index];
 
         /// <summary>論理項目の状態を反映</summary>
         protected virtual void Apply () => Item.Dirty = false;
