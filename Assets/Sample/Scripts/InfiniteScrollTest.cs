@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using InfiniteScroll;
@@ -37,6 +38,31 @@ public class InfiniteScrollTest : MonoBehaviour {
     [SerializeField]
     private Button _reportButton = default;
 
+    /// <summary>インデックススライダ</summary>
+    [SerializeField]
+    private Slider _indexSlider = default;
+
+    /// <summary>追加ボタン</summary>
+    [SerializeField]
+    private Button _addButton = default;
+
+    /// <summary>追加ボタンのラベル</summary>
+    private Text _addButtonLabel;
+
+    /// <summary>挿入ボタン</summary>
+    [SerializeField]
+    private Button _insertButton = default;
+
+    /// <summary>挿入ボタンのラベル</summary>
+    private Text _insertButtonLabel;
+
+    /// <summary>抹消ボタン</summary>
+    [SerializeField]
+    private Button _removeButton = default;
+
+    /// <summary>抹消ボタンのラベル</summary>
+    private Text _removeButtonLabel;
+
     /// <summary>論理項目リスト</summary>
     private List<Item> _items;
 
@@ -58,20 +84,71 @@ public class InfiniteScrollTest : MonoBehaviour {
         _reportButton?.onClick.AddListener (() => {
             Debug.Log ($"Checks: {string.Join (", ", _scroll.Items.ConvertAll (i => $"{(i as Item).Title}: {(i as Item).Check}"))}");
         });
-        
+        _indexSlider ??= GetComponentInChildren<Slider> ();
+        _addButton ??= buttons.GetNth (2);
+        _addButtonLabel = _addButton?.GetComponentInChildren<Text> ();
+        _addButton?.onClick.AddListener (() => _scroll.Modify ((scroll, items, first, last) => {
+            // 追加処理
+            var size = RandomSize (scroll.vertical);
+            var index = items.Count;
+            items.Add (new Item ($"No. {index}.Add", $"{(_randomToggle.isOn ? $"{size}\n" : "")}Add at {index} / {first} - {last}", label: $"check {index}.Add"));
+        }));
+        _insertButton ??= buttons.GetNth (3);
+        _insertButtonLabel = _insertButton?.GetComponentInChildren<Text> ();
+        _insertButton?.onClick.AddListener (() => _scroll.Modify ((scroll, items, first, last) => {
+            // 挿入処理
+            var size = RandomSize (scroll.vertical);
+            var index = Mathf.RoundToInt (_indexSlider.value);
+            items.Insert (index, new Item ($"No. {index}.Insert", $"{(_randomToggle.isOn ? $"{size}\n" : "")}Insert at {index} / {first} - {last}", label: $"check {index}.Insert"));
+        }));
+        _removeButton ??= buttons.GetNth (4);
+        _removeButtonLabel = _removeButton?.GetComponentInChildren<Text> ();
+        _removeButton?.onClick.AddListener (() => _scroll.Modify ((scroll, items, first, last) => {
+            // 抹消処理
+            var index = Mathf.RoundToInt (_indexSlider.value);
+            items.RemoveAt (index);
+        }));
+
         OnReset ();
     }
+
+    /// <summary>更新</summary>
+    private void Update () {
+        if (_scroll.Items != null) {
+            if (_indexSlider) {
+                _indexSlider.maxValue = _scroll.Items.Count > 0 ? _scroll.Items.Count - 1 : 0;
+            }
+            if (_addButtonLabel) {
+                _addButtonLabel.text = $"Add {_scroll.Items.Count}";
+            }
+            var index = _indexSlider ? Mathf.RoundToInt (_indexSlider.value) : (_scroll.FirstIndex + _scroll.LastIndex) / 2;
+            if (_insertButtonLabel) {
+                _insertButtonLabel.text = $"Insert {(index >= 0 ? index : 0)}";
+            }
+            if (_removeButtonLabel) {
+                _removeButtonLabel.text = _scroll.Items.Count > 0 ? $"Remove {index}" : "Remove";
+                _removeButton.interactable = _scroll.Items.Count > 0;
+            }
+        }
+    }
+
+    /// <summary>乱数サイズ</summary>
+    private float RandomSize (bool vertical) => (vertical ? 128 : 400) + Random.Range (0, 5) * 40;
+
+    /// <summary>ドロップダウンからenumを得る変換辞書</summary>
+    private static readonly Dictionary<int, InfiniteScroll.TextAnchor> _alignDict = new Dictionary<int, InfiniteScroll.TextAnchor> { { 0, InfiniteScroll.TextAnchor.LowerLeft }, { 1, InfiniteScroll.TextAnchor.MiddleCenter }, { 2, InfiniteScroll.TextAnchor.UpperRight }, };
 
     /// <summary>リセットボタン</summary>
     public void OnReset () {
         _items.Clear ();
+        // 生成
         for (var i = 0; i < 10; i++) {
             _scroll.horizontal = !(_scroll.vertical = _verticalToggle.isOn);
             _scroll.m_reverseArrangement = _reverseToggle.isOn;
             _scroll.m_controlChildSize = _ctrlSizeToggle.isOn;
-            _scroll.m_childAlignment = (InfiniteScroll.TextAnchor) _alignDropdown.value;
-            var size = (_scroll.vertical ? 128 : 400) + Random.Range (0, 5) * 40; // 乱数を埋め込む
-            _items.Add (new Item ($"No. {i}", $"{(_randomToggle.isOn ? $"{size}\n" : "")}start of {i} {new string ('\n', 1)}end of {i}", label: $"check {i}"));
+            _scroll.m_childAlignment = _alignDict [_alignDropdown.value];
+            var size = RandomSize (_scroll.vertical);
+            _items.Add (new Item ($"No. {i}", $"{(_randomToggle.isOn ? $"{size}\n" : "")}start of {i}\nend of {i}", label: $"check {i}"));
         }
         _scroll.Initialize (_items, 3);
     }
