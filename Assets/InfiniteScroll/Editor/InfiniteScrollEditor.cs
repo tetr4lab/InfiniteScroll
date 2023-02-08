@@ -79,6 +79,7 @@ namespace InfiniteScroll {
         public override void OnInspectorGUI () {
             base.OnInspectorGUI ();
             var component = (InfiniteScrollRect) target;
+            Undo.RecordObject (component, "Edit InfiniteScrollRect");
             if (component.horizontal == component.vertical) {
                 // トグルが変更されたら前回と逆にする (垂直と水平のトグルをラジオボタン化)
                 component.horizontal = _lastVertical;
