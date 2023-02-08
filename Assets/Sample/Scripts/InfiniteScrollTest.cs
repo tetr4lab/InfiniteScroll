@@ -34,10 +34,6 @@ public class InfiniteScrollTest : MonoBehaviour {
     [SerializeField]
     private Button _resetButton = default;
 
-    /// <summary>レポートボタン</summary>
-    [SerializeField]
-    private Button _reportButton = default;
-
     /// <summary>インデックススライダ</summary>
     [SerializeField]
     private Slider _indexSlider = default;
@@ -67,6 +63,10 @@ public class InfiniteScrollTest : MonoBehaviour {
     [SerializeField]
     private Button _clearButton = default;
 
+    /// <summary>デバッグ表示</summary>
+    [SerializeField]
+    private Text _debugInfo = default;
+
     /// <summary>論理項目リスト</summary>
     private List<Item> _items;
 
@@ -84,12 +84,8 @@ public class InfiniteScrollTest : MonoBehaviour {
         var buttons = GetComponentsInChildren<Button> ();
         _resetButton ??= buttons.GetNth (0);
         _resetButton?.onClick.AddListener (OnReset);
-        _reportButton ??= buttons.GetNth (1);
-        _reportButton?.onClick.AddListener (() => {
-            Debug.Log ($"Checks: {string.Join (", ", _scroll.ConvertAll (i => $"{(i as Item).Title}: {(i as Item).Check}"))}");
-        });
         _indexSlider ??= GetComponentInChildren<Slider> ();
-        _addButton ??= buttons.GetNth (2);
+        _addButton ??= buttons.GetNth (1);
         _addButtonLabel = _addButton?.GetComponentInChildren<Text> ();
         _addButton?.onClick.AddListener (() => _scroll.Modify ((scroll, items, first, last) => {
             // 追加処理
@@ -97,7 +93,7 @@ public class InfiniteScrollTest : MonoBehaviour {
             var index = items.Count;
             items.Add (new Item ($"No. {index}.Add", $"{(_randomToggle.isOn ? $"{size}\n" : "")}Add at {index} / {first} - {last}", label: $"check {index}.Add"));
         }));
-        _insertButton ??= buttons.GetNth (3);
+        _insertButton ??= buttons.GetNth (2);
         _insertButtonLabel = _insertButton?.GetComponentInChildren<Text> ();
         _insertButton?.onClick.AddListener (() => _scroll.Modify ((scroll, items, first, last) => {
             // 挿入処理
@@ -105,15 +101,16 @@ public class InfiniteScrollTest : MonoBehaviour {
             var index = Mathf.RoundToInt (_indexSlider.value);
             items.Insert (index, new Item ($"No. {index}.Insert", $"{(_randomToggle.isOn ? $"{size}\n" : "")}Insert at {index} / {first} - {last}", label: $"check {index}.Insert"));
         }));
-        _removeButton ??= buttons.GetNth (4);
+        _removeButton ??= buttons.GetNth (3);
         _removeButtonLabel = _removeButton?.GetComponentInChildren<Text> ();
         _removeButton?.onClick.AddListener (() => _scroll.Modify ((scroll, items, first, last) => {
             // 抹消処理
             var index = Mathf.RoundToInt (_indexSlider.value);
             items.RemoveAt (index);
         }));
-        _clearButton ??= buttons.GetNth (5);
+        _clearButton ??= buttons.GetNth (4);
         _clearButton?.onClick.AddListener (() => _scroll.Clear ());
+        _debugInfo ??= GameObject.Find ("DebugInfo")?.GetComponentInChildren<Text> ();
 
         OnReset ();
     }
@@ -137,6 +134,15 @@ public class InfiniteScrollTest : MonoBehaviour {
             }
             if (_clearButton) {
                 _clearButton.interactable = _scroll.Count > 0;
+            }
+            if (_debugInfo) {
+                index = 0;
+                _debugInfo.text = $@"{_scroll.FirstIndex} - {_scroll.LastIndex}
+{_scroll.ContentSize} / {_scroll.ViewportSize}
+{_scroll.Scroll}
+{string.Join ("\n", _scroll.ConvertAll (i => 
+                    $"{(index >= _scroll.FirstIndex && index <= _scroll.LastIndex ? "*" : " ")}{index++}: {Mathf.RoundToInt (i.Position)} - {Mathf.RoundToInt (i.Size)} {((i as Item).Check ? "[x]" : "[ ]")} {(i as Item).Title}"
+                ))}";
             }
         }
     }
