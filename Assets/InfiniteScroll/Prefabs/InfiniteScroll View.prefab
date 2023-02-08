@@ -446,7 +446,7 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_spacing: 0
-  m_childAlignment: 0
+  m_childAlignment: 6
   m_reverseArrangement: 0
   m_controlChildSize: 0
 --- !u!1 &848657159699370124
