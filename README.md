@@ -3,9 +3,11 @@ title: Unity シンプルな無限スクロール (uGUI)
 tags: Unity C# uGUI
 ---
 # はじめに
-- 「無限」と銘打っていますが、リストの上端と下端をループさせて、有限長のリストで無限にスクロールが可能なわけではありません。
+- 「無限」と銘打っていますが、次のような使い方はできません。
+  - リストの上端と下端をループさせて、有限長のリストで無限にスクロールする。
+  - 動的に生成される不定長のリストを自動的にスクロールする。
 - 次のような使い方を想定しています。
-  - `UnityEngine.UI`(uGUI)の`ScrollRect`を使い、`Content`内に`GameObject`を動的に生成する。
+  - `UnityEngine.UI.ScrollRect`(uGUI)の代替として`Content`内に`GameObject`を動的に生成する。
   - スクロール方向に対して、リストの前方にこれから表示される項目を追加し、表示の済んだリストの後方の項目を削除するなど、リストを動的に増減する。
   - 固定長だが長大なリストを扱う際に、可視範囲外の`GameObject`を節約する。
 
@@ -17,16 +19,17 @@ tags: Unity C# uGUI
 - リスト(`IEnumerable<InfiniteScrollItemBase>`)の登録と初期化
   - 縦スクロール、または、横スクロール
   - 項目に対するパディングとスペーシング
-  - スクロールと直行する方向の項目制御(下/左寄せ、中央寄せ、上/右寄せ、拡大)
+  - スクロールに直行する方向の項目制御(下/左寄せ、中央寄せ、上/右寄せ、拡縮Fit)
   - 項目の並び順の反転
 - スクロール方向に可変長の項目サイズ
-- リスト(`List<InfiniteScrollItemBase>`)への任意の操作
+- 項目リスト(`List<InfiniteScrollItemBase>`)への任意の操作
 - `UnityEngine.UI.ScrollRect`の主要な機能
 
 ## 概念
 - スクロールレクト
   - 矩形のスクロール領域です。
   - 縦、または、横に項目が並び、スクロールします。
+  - 可変長の項目を許容します。
 - 項目
   - 物理項目
     - スクロールレクトに縦または横に並んだ表示体です。
@@ -40,8 +43,34 @@ tags: Unity C# uGUI
   - 配列や`List`(コレクション)として実装されます。
 
 # 導入
-- 
+- アセットの本体は`Assets/InfiniteScroll/`にあります。
+  - フォルダを移動しても支障ありません。
+  - フォルダの中は不用意に触らないようにしてください。
+- `UI/Scroll View`の代わりに`UI/InfiniteScroll View`を、`UI/ScrollRect`の代わりに`UI/InfiniteScrollRect`を使用します。
+  - 必要に応じて、`ScrollRect`と共通の設定に加えて、`Padding`、`Spacing`、`Child Alignment`、`Reverse Arrangement`、`Control Child Size`を設定してください。
+  - `Content`には何も置かないでください。
+  - スクロール方向は縦/横のどちらかしか選べません。
+- クラス`InfiniteScrollItemBase`を継承したクラスを用意してください。
+  - `Create ()`を`override`するメソッドの他に、コンストラクタを実装してください。
+- クラス`InfiniteScrollItemComponentBase`を継承したクラスを用意してください。
+  - `static Create ()`を置き換える(`new`)メソッドを実装してください。
+    - このメソッドで項目の実体を生成するために、必要に応じて、クラスをアタッチしたプレファブを用意してください。
+  - `Initialize ()`、`Apply ()`を`override`するメソッドの他に、`Item`プロパティを実装してください。
 
+# 使い方
+- `InfiniteScrollRect`コンポーネントの`Initialize`に、`InfiniteScrollItemBase`を継承したクラスの配列またはリストを渡します。
+  - より具体的な使い方は、サンプルアセットを参照してください。
+- フォルダ構造
+  - Sample/
+    - Resouces/
+      - Prefabs/
+        - Item.prefab: 項目のプレファブ
+    - Scenes/
+      - InfiniteScrollTest.unity: サンプルシーン
+    - Scripts/
+      - InfiniteScrollTest.cs: サンプルメイン
+      - Item.cs: `InfiniteScrollItemBase`を継承した論理項目クラス
+      - ItemComponent.cs: `InfiniteScrollItemComponentBase`を継承した物理項目クラス
 
 # 主なAPI
 ## `class InfiniteScrollRect`
@@ -51,37 +80,38 @@ tags: Unity C# uGUI
 #### `RectOffset m_padding`
 - `Content`と項目の間の隙間のサイズです。
 - インスペクタで設定可能な項目で、初期化の際に使われます。
-  - 変更後には再初期化が必要になります。
+  - 動的な変更後には再初期化が必要になります。
 
 #### `float m_spacing`
 - 項目間の隙間のサイズです。
 - インスペクタで設定可能な項目で、初期化の際に使われます。
+  - 動的な変更後には再初期化が必要になります。
 
 #### `TextAnchor m_childAlignment`
-- スクロールと直行する方向の項目の整列制御です。
+- スクロールに直行する方向の項目の整列制御です。
   - 下/左寄せ、中央寄せ、上/右寄せ
   - `m_controlChildSize`が真の時は効果がありません。
 - インスペクタで設定可能な項目で、初期化の際に使われます。
-  - 変更後には再初期化が必要になります。
+  - 動的な変更後には再初期化が必要になります。
 
 #### `bool m_reverseArrangement`
 - 項目の並び順を逆にします。
   - 偽だと、上から下、左から右になります。
   - 真だと、下から上、右から左になります。
 - インスペクタで設定可能な項目で、初期化の際に使われます。
-  - 変更後には再初期化が必要になります。
+  - 動的な変更後には再初期化が必要になります。
 
 #### `bool m_controlChildSize`
-- スクロールと直行する方向の項目の拡大制御です。
+- スクロールに直行する方向の項目の拡大制御です。
   - 真だと、項目が幅いっぱいに拡大されて、`m_childAlignment`の設定は無効になります。
 - インスペクタで設定可能な項目で、初期化の際に使われます。
-  - 変更後には再初期化が必要になります。
+  - 動的な変更後には再初期化が必要になります。
 
 ### プロパティ
-#### bool Valid
+#### `bool Valid`
 - スクロールレクトが有効に初期化されていれば真です。
 
-#### `InfiniteScrollItemBase this [int index] => _items [index]`
+#### `InfiniteScrollItemBase this [int index]`
 - 論理項目リストにアクセスするインデクサです。
 
 #### `int Count`
