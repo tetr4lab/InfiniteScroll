@@ -1,6 +1,8 @@
 ﻿using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEditor.UI;
 using UnityEngine;
@@ -39,15 +41,33 @@ namespace InfiniteScroll {
                 eventSystem.AddComponent<StandaloneInputModule> ();
                 eventSystem.transform.SetParent (eventSystem.transform);
             }
-            // プレファブから生成
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject> ("Assets/InfiniteScroll/Prefabs/InfiniteScroll View.prefab");
-            if (prefab != null) {
-                var root = Instantiate (prefab, parent.transform);
-                root.transform.SetParent ((parent ?? root).transform); // 親がないなら自身を親に
-                root.name = "InfiniteScroll View";
-                Selection.activeGameObject = root;
+            if (_prefab == null) {
+                // プレファブをロード
+                var path = Path.GetDirectoryName (Path.GetDirectoryName (ThisScriptPath ())); // スクリプトのひとつ上のフォルダから辿る
+                _prefab = AssetDatabase.LoadAssetAtPath<GameObject> (Path.Combine (path, "Prefabs/InfiniteScroll View.prefab"));
+            }
+            if (_prefab != null) {
+                // プレファブから生成
+                try {
+                    AssetDatabase.StartAssetEditing ();
+                    var root = Instantiate (_prefab, parent.transform);
+                    root.transform.SetParent ((parent ?? root).transform); // 親がないなら自身を親に
+                    root.name = "InfiniteScroll View";
+                    Undo.RegisterCreatedObjectUndo (root, "Create InfiniteScrollRect");
+                    Selection.activeGameObject = root;
+                }
+                catch (Exception e) {
+                    Debug.LogError (e);
+                }
+                finally {
+                    AssetDatabase.StopAssetEditing ();
+                    AssetDatabase.Refresh ();
+                }
             }
         }
+
+        /// <summary>プレファブ</summary>
+        private static GameObject _prefab;
 
         /// <summary>前回の垂直側トグル状態</summary>
         private bool _lastVertical;
@@ -82,6 +102,9 @@ namespace InfiniteScroll {
             component.m_reverseArrangement = EditorGUILayout.Toggle ("Reverse Arrangement", component.m_reverseArrangement);
             component.m_controlChildSize = EditorGUILayout.Toggle ("Control Child Size", component.m_controlChildSize);
         }
+
+        /// <summary>このスクリプトのパス</summary>
+        public static string ThisScriptPath ([CallerFilePath] string path = "") => path.Substring (path.IndexOf ($"{Path.DirectorySeparatorChar}Assets{Path.DirectorySeparatorChar}") + 1);
 
     }
 
