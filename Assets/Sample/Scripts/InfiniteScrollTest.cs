@@ -138,7 +138,7 @@ public class InfiniteScrollTest : MonoBehaviour {
             if (_debugInfo) {
                 index = 0;
                 _debugInfo.text = $@"{_scroll.FirstIndex} - {_scroll.LastIndex}
-{_scroll.ContentSize} / {_scroll.ViewportSize}
+{_scroll.ViewportSize} / {_scroll.ContentSize}
 {_scroll.Scroll}
 {string.Join ("\n", _scroll.ConvertAll (i => 
                     $"{(index >= _scroll.FirstIndex && index <= _scroll.LastIndex ? "*" : " ")}{index++}: {Mathf.RoundToInt (i.Position)} - {Mathf.RoundToInt (i.Size)} {((i as Item).Check ? "[x]" : "[ ]")} {(i as Item).Title}"

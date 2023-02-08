@@ -108,26 +108,29 @@ namespace InfiniteScroll {
         public virtual void Modify (Action<InfiniteScrollRect, List<InfiniteScrollItemBase>, int, int> action) {
             var lockBackup = LockUpdate;
             LockUpdate = true;
-            var locked = LockScroll ();
-            var first = locked.index;
-            var item = _items.Count > 0 ? _items [locked.index] : null;
-            Debug.Log ($"Modify [{_items.Count}]: index={locked.index}, FirstIndex={FirstIndex}, LastIndex={LastIndex}");
+            var first = 0;
+            var locked = new List<(InfiniteScrollItemBase item, float offset)> ();
+            if (FirstIndex >= 0) {
+                for (var i = FirstIndex; i <= LastIndex; i++) {
+                    locked.Add (PackScroll (i));
+                }
+                first = _items.IndexOf (locked [0].item);
+                Debug.Log ($"ScrollLocked: {FirstIndex} ({first}) - {LastIndex}, offsets={{{string.Join(",", locked.ConvertAll (l => l.offset))}}}");
+            }
+            Debug.Log ($"Modify [{_items.Count}]: FirstIndex={FirstIndex}, LastIndex={LastIndex}");
             action (this, _items, FirstIndex, LastIndex);
-            if (item != null) {
-                locked.index = _items.IndexOf (item);
-            }
-            if (item != null && locked.index >= 0) {
-                FirstIndex = first;
+            if (_items.Count > 0) {
+                FirstIndex = (first < _items.Count) ? first : 0;
+                ApplyItems (FirstIndex);
+                CalculatePositions ();
+                SetScroll (locked);
+                Release (FirstIndex, LastIndex);
             } else {
-                // 着目オブジェクトが失われたので最初から
-                FirstIndex = 0;
-                locked = (0, 0f);
+                Clear ();
             }
-            ApplyItems (FirstIndex);
-            CalculatePositions ();
-            SetScroll (locked);
-            Release (FirstIndex, LastIndex);
             LockUpdate = lockBackup;
+
+            (InfiniteScrollItemBase item, float offset) PackScroll (int index) => (_items [index], GetScrollOffset (index));
         }
 
         /// <summary>初期化</summary>
@@ -184,23 +187,36 @@ namespace InfiniteScroll {
         }
 
         /// <summary>スクロール位置を記録</summary>
-        public virtual (int index, float offset) LockScroll () {
-            var index = (FirstIndex + LastIndex) / 2;
+        public virtual (InfiniteScrollItemBase item, float offset) LockScroll (int index = -1) {
+            if (_items.Count <= 0) { return (null, 0f); }
+            if (index < 0 || index >= _items.Count) {
+                index = Mathf.Clamp ((FirstIndex + LastIndex) / 2, 0, _items.Count - 1);
+            }
             var offset = GetScrollOffset (index);
-            Debug.Log ($"ScrollLocked Item [{index}] offset={offset}");
-            return (index, offset);
+            Debug.Log ($"ScrollLocked Items [{index}] offset={offset}, FirstIndex={FirstIndex}, LastIndex={LastIndex}");
+            return (_items [index], offset);
+        }
+
+        /// <summary>項目へスクロール</summary>
+        public virtual void SetScroll (IEnumerable<(InfiniteScrollItemBase item, float offset)> lockeds) {
+            foreach (var locked in lockeds) {
+                if (locked.item != null && _items.IndexOf (locked.item) >= 0) {
+                    SetScroll (locked.item, locked.offset);
+                    return;
+                }
+            }
         }
 
         /// <summary>項目へスクロール</summary>
         /// <param name="item">基準項目</param>
         /// <param name="offset">基準項目からのオフセット</param>
         public virtual void SetScroll (InfiniteScrollItemBase item, float offset = 0) {
-            if (item == null) {
+            if (item == null || _items.IndexOf (item) < 0) {
                 Scroll = (vertical == m_reverseArrangement) ? 0f : 1f;
                 return;
             }
             var scroll = (item.Position + offset) / (ContentSize - ViewportSize);
-            Debug.Log ($"SetScroll Item [{_items.IndexOf (item)}] offset={offset}, Scroll={Scroll} => {((vertical == m_reverseArrangement) ? scroll : 1f - scroll)} ({scroll})");
+            Debug.Log ($"SetScroll Items [{_items.IndexOf (item)}] offset={offset}, Scroll={Scroll} => {((vertical == m_reverseArrangement) ? scroll : 1f - scroll)} ({scroll})");
             Scroll = (vertical == m_reverseArrangement) ? scroll : 1f - scroll;
         }
 
@@ -210,16 +226,16 @@ namespace InfiniteScroll {
         public virtual void SetScroll (int index, float offset = 0) => SetScroll (_items.Count <= 0 ? null : _items [index], offset);
 
         /// <summary>項目へスクロール</summary>
-        /// <param name="point">基準項目のインデックスとオフセット</param>
-        public virtual void SetScroll ((int index, float offset) point) => SetScroll (_items.Count <= 0 ? null : _items [point.index], point.offset);
+        /// <param name="point">基準項目とオフセット</param>
+        public virtual void SetScroll ((InfiniteScrollItemBase item, float offset) point) => SetScroll (_items.Count <= 0 ? null : point.item, point.offset);
 
         /// <summary>現在のスクロール位置に対する項目からのオフセットを得る</summary>
         /// <param name="index">項目のインデックス</param>
         /// <returns>オフセット</returns>
         protected virtual float GetScrollOffset (int index) {
-            if (_items.Count <= 0) { return 0f; }
+            if (index < 0 || index >=_items.Count) { return 0f; }
             var offset = ContentSize < ViewportSize ? 0f : (vertical == m_reverseArrangement ? Scroll : 1f - Scroll) * (ContentSize - ViewportSize);
-            Debug.Log ($"Scroll.Offset={offset} - Items [{index}].Position={_items [index].Position} ={offset - _items [index].Position}, Scroll={Scroll}, ScrollableSize={ContentSize - ViewportSize}");
+            //Debug.Log ($"Scroll.Offset={offset} - Items [{index}].Position={_items [index].Position} ={offset - _items [index].Position}, Scroll={Scroll}, ScrollableSize={ContentSize - ViewportSize}");
             return offset - _items [index].Position;
         }
 
@@ -272,7 +288,7 @@ namespace InfiniteScroll {
             // 解放
             Release (first, last, forceClear);
             // 割当
-            float pos = - GetScrollOffset (first);
+            var pos = - GetScrollOffset (first);
             for (var i = first; i <= last; i++) {
                 var component = _components.Find (c => c.Index == i);
                 if (component == null) {
@@ -311,15 +327,15 @@ namespace InfiniteScroll {
             var first = -1;
             var last = -1;
             for (var i = 0; i < _items.Count; i++) {
-                if ((_items [i].Position + _items[i].Size) >= top && _items [i].Position <= bottom) {
+                if ((_items [i].Position + _items[i].Size) > top && _items [i].Position < bottom) {
                     last = i;
                     if (first < 0) {
                         first = i;
                     }
-                    //Debug.Log ($"Items [{i}] {first}-{last}: Position={Items [i].Position}, Size={Items [i].Size}, top={top}, bottom={bottom}, Scroll={Scroll} * (ContentSize={ContentSize} - ViewportSize={ViewportSize})");
+                    //Debug.Log ($"Items [{i}] {first}-{last}: Position={_items [i].Position}, Size={_items [i].Size}, top={top}, bottom={bottom}, Scroll={Scroll} * (ContentSize={ContentSize} - ViewportSize={ViewportSize})");
                 }
             }
-            //Debug.Log ($"{first}:{_firstIndex}, {last}:{_lastIndex} : top={top}, bottom={bottom}, Scroll={Scroll} * (ContentSize={ContentSize} - ViewportSize={ViewportSize})");
+            //Debug.Log ($"{first}:{FirstIndex}, {last}:{LastIndex} : top={top}, bottom={bottom}, Scroll={Scroll} * (ContentSize={ContentSize} - ViewportSize={ViewportSize})");
             if (first >= 0 && (first != FirstIndex || last != LastIndex)) {
                 var locked = LockScroll ();
                 ApplyItems (first, last);
@@ -482,12 +498,12 @@ namespace InfiniteScroll {
             for (var i = 0; i < MaxNumberOfLayoutRebuilds; i++) {
                 var lastSize = Size;
                 LayoutRebuilder.ForceRebuildLayoutImmediate (RectTransform);
-                Debug.Log ($"Item [{Index}].SetSize({i}) {lastSize} => {Size}: controlSize={m_controlChildSize}, localPosition={RectTransform.localPosition}, sizeDelta{RectTransform.sizeDelta}");
+                Debug.Log ($"Items [{Index}].SetSize({i}) {lastSize} => {Size}: controlSize={m_controlChildSize}, localPosition={RectTransform.localPosition}, sizeDelta{RectTransform.sizeDelta}");
                 if (Mathf.Approximately (lastSize, Size)) {
                     break;
                 }
             }
-            Debug.Log ($"Item [{Index}].SetSize {Item.Size} => {Size}");
+            Debug.Log ($"Items [{Index}].SetSize {Item.Size} => {Size}");
             Item.Size = Size;
         }
 
