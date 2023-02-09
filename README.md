@@ -64,7 +64,7 @@ tags: Unity C# uGUI
   - Sample/
     - Resouces/
       - Prefabs/
-        - Item.prefab: 項目のプレファブ
+        - Item.prefab: 物理項目のプレファブ
     - Scenes/
       - InfiniteScrollTest.unity: サンプルシーン
     - Scripts/
