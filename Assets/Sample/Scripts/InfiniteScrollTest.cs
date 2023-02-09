@@ -52,14 +52,18 @@ public class InfiniteScrollTest : MonoBehaviour {
     /// <summary>挿入ボタンのラベル</summary>
     private Text _insertButtonLabel;
 
-    /// <summary>抹消ボタン</summary>
+    /// <summary>除去ボタン</summary>
     [SerializeField]
     private Button _removeButton = default;
 
-    /// <summary>抹消ボタンのラベル</summary>
+    /// <summary>除去ボタンのラベル</summary>
     private Text _removeButtonLabel;
 
-    /// <summary>抹消ボタン</summary>
+    /// <summary>指定除去ボタン</summary>
+    [SerializeField]
+    private Button _removeCheckedButton = default;
+
+    /// <summary>全除去ボタン</summary>
     [SerializeField]
     private Button _clearButton = default;
 
@@ -115,7 +119,16 @@ public class InfiniteScrollTest : MonoBehaviour {
             items.RemoveAt (index);
             Debug.Log ($"Removed {item}");
         }));
-        _clearButton ??= buttons.GetNth (4);
+        _removeCheckedButton ??= buttons.GetNth (4);
+        _removeCheckedButton?.onClick.AddListener (() => _scroll.Modify ((scroll, items, first, last) => {
+            // 指定除去処理
+            var targetItems = items.FindAll (item => ((item as Item)?.Check == true));
+            foreach (var item in targetItems) {
+                items.Remove (item);
+            }
+            Debug.Log ($"Removed Checked {{{string.Join (", ", targetItems.ConvertAll (i => i.ToString ()))}}}");
+        }));
+        _clearButton ??= buttons.GetNth (5);
         _clearButton?.onClick.AddListener (() => {
             // 全除去処理
             _scroll.Clear ();
@@ -147,6 +160,10 @@ public class InfiniteScrollTest : MonoBehaviour {
                 _removeButtonLabel.text = _scroll.Count > 0 ? $"Remove {index}" : "Remove";
                 _removeButton.interactable = _scroll.Count > 0;
             }
+            if (_removeCheckedButton) {
+                // 指定除去ボタンの活殺
+                _removeCheckedButton.interactable = _scroll.Count > 0;
+            }
             if (_clearButton) {
                 // 全除去ボタンの活殺
                 _clearButton.interactable = _scroll.Count > 0;
@@ -154,11 +171,12 @@ public class InfiniteScrollTest : MonoBehaviour {
             if (_debugInfo) {
                 // デバッグ情報表示
                 index = 0;
-                _debugInfo.text = $@"{_scroll.FirstIndex} - {_scroll.LastIndex}
-{_scroll.ViewportSize} / {_scroll.ContentSize}
-{_scroll.Scroll}
+                _debugInfo.text = $@"viewport: {_scroll.viewport.rect.size}
+content: {_scroll.content.rect.size}
+scroll: {_scroll.Scroll}
+visible: {(_scroll.FirstIndex < 0 ? "no items" : $"{_scroll.FirstIndex} - {_scroll.LastIndex}")}
 {string.Join ("\n", _scroll.ConvertAll (i => 
-                    $"{(index >= _scroll.FirstIndex && index <= _scroll.LastIndex ? "*" : " ")}{index++}: {Mathf.RoundToInt (i.Position)} - {Mathf.RoundToInt (i.Size)} {((i as Item).Check ? "[x]" : "[ ]")} {(i as Item).Title}"
+                    $"{(index >= _scroll.FirstIndex && index <= _scroll.LastIndex ? "*" : " ")}[{index++}] {Mathf.RoundToInt (i.Position)} - {Mathf.RoundToInt (i.Size)} {((i as Item).Check ? "[x]" : "[ ]")} {(i as Item).Title}"
                 ))}";
             }
         }
