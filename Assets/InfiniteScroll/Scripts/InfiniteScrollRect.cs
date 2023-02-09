@@ -63,11 +63,32 @@ namespace InfiniteScroll {
         /// <summary>更新停止</summary>
         public virtual bool LockUpdate { get; protected set; }
 
-        /// <summary>可視の最初の物理項目の論理インデックス</summary>
+        /// <summary>表示中の最初の物理項目の論理インデックス</summary>
         public virtual int FirstIndex { get; protected set; } = -1;
 
-        /// <summary>可視の最後の物理項目の論理インデックス</summary>
+        /// <summary>表示中の最後の物理項目の論理インデックス</summary>
         public virtual int LastIndex { get; protected set; } = -1;
+
+        /// <summary>可視範囲</summary>
+        protected virtual (float top, float bottom, int first, int last) VisibleRange {
+            get {
+                var top = (vertical == m_reverseArrangement ? Scroll : 1f - Scroll) * (ContentSize - ViewportSize);
+                var bottom = top + ViewportSize;
+                var first = -1;
+                var last = -1;
+                for (var i = 0; i < _items.Count; i++) {
+                    if ((_items [i].Position + _items [i].Size) > top && _items [i].Position < bottom) {
+                        last = i;
+                        if (first < 0) {
+                            first = i;
+                        }
+                        //Debug.Log ($"Items [{i}] {first}-{last}: Position={_items [i].Position}, Size={_items [i].Size}, top={top}, bottom={bottom}, Scroll={Scroll} * (ContentSize={ContentSize} - ViewportSize={ViewportSize})");
+                    }
+                }
+                //Debug.Log ($"{first}:{FirstIndex}, {last}:{LastIndex} : top={top}, bottom={bottom}, Scroll={Scroll} * (ContentSize={ContentSize} - ViewportSize={ViewportSize})");
+                return (top, bottom, first, last);
+            }
+        }
 
         /// <summary>スクロール方向のビューポートサイズ</summary>
         public virtual float ViewportSize => vertical ? viewport.rect.height : viewport.rect.width;
@@ -128,10 +149,12 @@ namespace InfiniteScroll {
             Debug.Log ($"Modify [{_items.Count}]: FirstIndex={FirstIndex}, LastIndex={LastIndex}");
             action (this, _items, FirstIndex, LastIndex);
             if (_items.Count > 0) {
-                FirstIndex = (first < _items.Count) ? first : 0;
+                var lockedOne = locked.Find (l => l.item != null && _items.Contains (l.item));
+                FirstIndex = lockedOne == default ? 0 : _items.IndexOf (lockedOne.item);
+                SetAverageSize (); // 新規の項目にサイズを設定
                 ApplyItems (FirstIndex);
                 CalculatePositions ();
-                SetScroll (locked);
+                SetScroll (lockedOne);
                 Release (FirstIndex, LastIndex);
             } else {
                 Clear ();
@@ -146,32 +169,6 @@ namespace InfiniteScroll {
             if (items == null) { throw new ArgumentNullException ("items"); }
             // 抹消
             Clear (true);
-            LayoutRebuilder.ForceRebuildLayoutImmediate (transform as RectTransform);
-            // 生成
-            _items = new List<InfiniteScrollItemBase> (items);
-            if (index < 0 || index > _items.Count) { throw new ArgumentOutOfRangeException ("index"); }
-            _components = new List<InfiniteScrollItemComponentBase> ();
-            // 生成
-            var sumSize = 0f + (m_reverseArrangement ? (vertical ? m_padding.bottom : m_padding.right) : (vertical ? m_padding.top : m_padding.left));
-            FirstIndex = index; // 可視範囲の開始
-            LastIndex = _items.Count - 1;
-            for (var i = index; i <= LastIndex; i++) {
-                sumSize += CreateItem (i).Size + m_spacing;
-                if (sumSize > ViewportSize) {
-                    // 可視端への到達
-                    LastIndex = i;
-                }
-            }
-            // 仮サイズ
-            var averageSize = 0f;
-            _components.ForEach (c => averageSize += c.Size);
-            averageSize /= (LastIndex - FirstIndex + 1);
-            for (var i = 0; i < FirstIndex; i++) {
-                _items [i].Size = averageSize;
-            }
-            for (var i = LastIndex + 1; i < _items.Count; i++) {
-                _items [i].Size = averageSize;
-            }
             // 配置
             if (vertical) {
                 var y = m_reverseArrangement ? 0f : 1f;
@@ -188,19 +185,29 @@ namespace InfiniteScroll {
                 content.offsetMin = Vector2.zero;
                 content.offsetMax = Vector2.zero;
             }
+            LayoutRebuilder.ForceRebuildLayoutImmediate (transform as RectTransform);
+            // 生成
+            _items = new List<InfiniteScrollItemBase> (items);
+            if (index < 0 || index > _items.Count) { throw new ArgumentOutOfRangeException ("index"); }
+            _components = new List<InfiniteScrollItemComponentBase> ();
+            FirstIndex = index;
+            ApplyItems (FirstIndex);
+            SetAverageSize ();
             CalculatePositions ();
-            // 可視の最初へスクロール
             SetScroll (FirstIndex);
             Debug.Log ($"Initialized: viewport={viewport.rect.size}, content={content.rect.size}, first={FirstIndex}, last={LastIndex}, Scroll={Scroll}");
         }
 
-        /// <summary>項目へスクロール</summary>
-        /// <param name="lockeds">基準項目とオフセット</param>
-        public virtual void SetScroll (IEnumerable<(InfiniteScrollItemBase item, float offset)> lockeds) {
-            foreach (var locked in lockeds) {
-                if (locked.item != null && _items.IndexOf (locked.item) >= 0) {
-                    SetScroll (locked.item, locked.offset);
-                    return;
+        /// <summary>有効な物理項目の平均サイズを算出して未初期化の論理項目に設定</summary>
+        protected virtual void SetAverageSize () {
+            var averageSize = 0f;
+            var count = 0;
+            _components.ForEach (component => { if (component.Index >= 0) { averageSize += component.Size; count++; } });
+            averageSize /= count;
+            for (var i = 0; i < _items.Count; i++) {
+                if (_items [i].Size <= 0) {
+                    _items [i].Size = averageSize;
+                    Debug.Log ($"Items [{i}].Size={averageSize}");
                 }
             }
         }
@@ -285,7 +292,7 @@ namespace InfiniteScroll {
             var forceClear = FirstIndex == first && LastIndex == last || last < 0;
             var rebuild = last < 0;
             if (rebuild) { last = _items.Count - 1; }
-            Debug.Log ($"ApplyItems: ({FirstIndex}, {LastIndex}) {(forceClear ? "clear " : "")}=> ({first}, {last}), ContentSize={ContentSize}, Scroll={Scroll}");
+            Debug.Log ($"ApplyItems: ({FirstIndex}, {LastIndex}) {(forceClear ? "clear " : "")}{(rebuild ? "rebuild " : "")}=> ({first}, {last}), ContentSize={ContentSize}, Scroll={Scroll}");
             // 解放
             Release (first, last, forceClear);
             // 割当
@@ -323,39 +330,26 @@ namespace InfiniteScroll {
 
         /// <summary>可視範囲の変化を監視</summary>
         protected virtual void CheckVisibleRange () {
-            var top = (vertical == m_reverseArrangement ? Scroll : 1f - Scroll) * (ContentSize - ViewportSize);
-            var bottom = top + ViewportSize;
-            var first = -1;
-            var last = -1;
-            for (var i = 0; i < _items.Count; i++) {
-                if ((_items [i].Position + _items[i].Size) > top && _items [i].Position < bottom) {
-                    last = i;
-                    if (first < 0) {
-                        first = i;
-                    }
-                    //Debug.Log ($"Items [{i}] {first}-{last}: Position={_items [i].Position}, Size={_items [i].Size}, top={top}, bottom={bottom}, Scroll={Scroll} * (ContentSize={ContentSize} - ViewportSize={ViewportSize})");
-                }
-            }
-            //Debug.Log ($"{first}:{FirstIndex}, {last}:{LastIndex} : top={top}, bottom={bottom}, Scroll={Scroll} * (ContentSize={ContentSize} - ViewportSize={ViewportSize})");
-            if (first >= 0) {
-                if (first == FirstIndex - 1 && last == LastIndex && (_items [first].Position + _items [first].Size) <= top + VisibleRangePlay) {
+            var range = VisibleRange;
+            if (range.first >= 0) {
+                if (range.first == FirstIndex - 1 && range.last == LastIndex && (_items [range.first].Position + _items [range.first].Size) <= range.top + VisibleRangePlay) {
                     // 遊びとして除外
-                    Debug.Log ($"({FirstIndex}, {LastIndex})=>({first}, {last}): ({_items [FirstIndex].Position}, {_items [FirstIndex].Size})=>({_items [first].Position}, {_items [first].Size}) view=({top}, {bottom})");
-                } else if (first == FirstIndex + 1 && last == LastIndex && (_items [FirstIndex].Position + _items [FirstIndex].Size) <= top + VisibleRangePlay) {
+                    Debug.Log ($"({FirstIndex}, {LastIndex})=>({range.first}, {range.last}): ({_items [FirstIndex].Position}, {_items [FirstIndex].Size})=>({_items [range.first].Position}, {_items [range.first].Size}) view=({range.top}, {range.bottom})");
+                } else if (range.first == FirstIndex + 1 && range.last == LastIndex && (_items [FirstIndex].Position + _items [FirstIndex].Size) <= range.top + VisibleRangePlay) {
                     // 遊びとして除外
-                    Debug.Log ($"({FirstIndex}, {LastIndex})=>({first}, {last}): ({_items [FirstIndex].Position}, {_items [FirstIndex].Size})=>({_items [first].Position}, {_items [first].Size}) view=({top}, {bottom})");
-                } else if (first == FirstIndex && last == LastIndex + 1 && _items [last].Position >= bottom - VisibleRangePlay) {
+                    Debug.Log ($"({FirstIndex}, {LastIndex})=>({range.first}, {range.last}): ({_items [FirstIndex].Position}, {_items [FirstIndex].Size})=>({_items [range.first].Position}, {_items [range.first].Size}) view=({range.top}, {range.bottom})");
+                } else if (range.first == FirstIndex && range.last == LastIndex + 1 && _items [range.last].Position >= range.bottom - VisibleRangePlay) {
                     // 遊びとして除外
-                    Debug.Log ($"({FirstIndex}, {LastIndex})=>({first}, {last}): ({_items [LastIndex].Position}, {_items [LastIndex].Size})=>({_items [last].Position}, {_items [last].Size}) view=({top}, {bottom})");
-                } else if (first == FirstIndex && last == LastIndex - 1 && _items [LastIndex].Position >= bottom - VisibleRangePlay) {
+                    Debug.Log ($"({FirstIndex}, {LastIndex})=>({range.first}, {range.last}): ({_items [LastIndex].Position}, {_items [LastIndex].Size})=>({_items [range.last].Position}, {_items [range.last].Size}) view=({range.top}, {range.bottom})");
+                } else if (range.first == FirstIndex && range.last == LastIndex - 1 && _items [LastIndex].Position >= range.bottom - VisibleRangePlay) {
                     // 遊びとして除外
-                    Debug.Log ($"({FirstIndex}, {LastIndex})=>({first}, {last}): ({_items [LastIndex].Position}, {_items [LastIndex].Size})=>({_items [last].Position}, {_items [last].Size}) view=({top}, {bottom})");
-                } else if (first != FirstIndex || last != LastIndex) {
+                    Debug.Log ($"({FirstIndex}, {LastIndex})=>({range.first}, {range.last}): ({_items [LastIndex].Position}, {_items [LastIndex].Size})=>({_items [range.last].Position}, {_items [range.last].Size}) view=({range.top}, {range.bottom})");
+                } else if (range.first != FirstIndex || range.last != LastIndex) {
                     var locked = GetScroll ();
-                    ApplyItems (first, last);
+                    ApplyItems (range.first, range.last);
                     SetScroll (locked);
-                    FirstIndex = first;
-                    LastIndex = last;
+                    FirstIndex = range.first;
+                    LastIndex = range.last;
                 }
             }
         }
