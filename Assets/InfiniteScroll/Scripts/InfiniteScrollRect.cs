@@ -60,6 +60,9 @@ namespace InfiniteScroll {
         /// <summary>更新停止</summary>
         public virtual bool LockUpdate { get; protected set; }
 
+        /// <summary>サイズの更新請求</summary>
+        public virtual bool ResizeRequest { get; set; }
+
         /// <summary>表示中の最初の物理項目の論理インデックス</summary>
         public virtual int FirstIndex { get; protected set; } = -1;
 
@@ -216,7 +219,7 @@ namespace InfiniteScroll {
 
         /// <summary>項目の位置とコンテントサイズを算出</summary>
         /// <param name="index">Items.Countを指定するとContentのサイズを返す</param>
-        public virtual void CalculatePositions () {
+        protected virtual void CalculatePositions () {
             // サイズ校正
             foreach (var component in Components) {
                 if (component.Index >= 0 && component.Size != component.Item.Size) {
@@ -332,6 +335,12 @@ namespace InfiniteScroll {
         /// <summary>更新</summary>
         protected virtual void Update () {
             if (!LockUpdate && Components?.Count > 0 && FirstIndex >= 0) {
+                if (ResizeRequest) {
+                    var locked = GetScroll ();
+                    CalculatePositions ();
+                    SetScroll (locked);
+                    ResizeRequest = false;
+                }
                 FolowVisibleRange ();
                 FolowViewportSize ();
             }

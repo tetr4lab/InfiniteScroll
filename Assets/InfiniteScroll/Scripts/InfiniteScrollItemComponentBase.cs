@@ -98,10 +98,8 @@ namespace InfiniteScroll {
                     Apply ();
                 }
                 if (Item.Size != Size) {
-                    var locked = ScrollRect.GetScroll ();
                     Item.Size = Size;
-                    ScrollRect.CalculatePositions ();
-                    ScrollRect.SetScroll (locked);
+                    ScrollRect.ResizeRequest = true;
                 }
             }
         }
