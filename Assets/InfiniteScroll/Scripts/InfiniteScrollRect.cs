@@ -13,7 +13,7 @@ namespace InfiniteScroll {
     [RequireComponent (typeof (RectTransform))]
     public class InfiniteScrollRect : ScrollRect {
 
-        /// <summary>表示範囲判定の遊び</summary>
+        /// <summary>可視範囲判定の遊び</summary>
         protected const int VisibleRangePlay = 1;
 
         /// <summary>項目の外縁</summary>
@@ -57,20 +57,23 @@ namespace InfiniteScroll {
         /// <summary>論理項目リスト</summary>
         protected virtual List<InfiniteScrollItemBase> _items { get; set; }
 
-        /// <summary>実体項目リスト</summary>
+        /// <summary>物理項目リスト</summary>
         protected virtual List<InfiniteScrollItemComponentBase> _components { get; set; }
 
         /// <summary>更新停止</summary>
         public virtual bool LockUpdate { get; protected set; }
 
-        /// <summary>可視の最初の実体項目の論理インデックス</summary>
+        /// <summary>可視の最初の物理項目の論理インデックス</summary>
         public virtual int FirstIndex { get; protected set; } = -1;
 
-        /// <summary>可視の最後の実体項目の論理インデックス</summary>
+        /// <summary>可視の最後の物理項目の論理インデックス</summary>
         public virtual int LastIndex { get; protected set; } = -1;
 
         /// <summary>スクロール方向のビューポートサイズ</summary>
         public virtual float ViewportSize => vertical ? viewport.rect.height : viewport.rect.width;
+
+        /// <summary>前回のビューポートサイズ</summary>
+        protected Vector2 _lastViewportSize;
 
         /// <summary>スクロール方向のコンテントサイズ</summary>
         public virtual float ContentSize {
@@ -91,6 +94,7 @@ namespace InfiniteScroll {
         }
 
         /// <summary>クリア</summary>
+        /// <param name="hard">リスト自体を削除する(!= 項目を削除してリストを残す)</param>
         public virtual void Clear (bool hard = false) {
             foreach (RectTransform t in content) {
                 Destroy (t.gameObject);
@@ -108,6 +112,7 @@ namespace InfiniteScroll {
         }
 
         /// <summary>アイテムの更新</summary>
+        /// <param name="action">スクロールレクト、項目リスト、可視開始、終了のインデックスを渡すメソッド</param>
         public virtual void Modify (Action<InfiniteScrollRect, List<InfiniteScrollItemBase>, int, int> action) {
             var lockBackup = LockUpdate;
             LockUpdate = true;
@@ -135,6 +140,8 @@ namespace InfiniteScroll {
         }
 
         /// <summary>初期化</summary>
+        /// <param name="items">項目のリスト</param>
+        /// <param name="index">最初に表示する項目</param>
         public virtual void Initialize (IEnumerable<InfiniteScrollItemBase> items, int index = 0) {
             if (items == null) { throw new ArgumentNullException ("items"); }
             // 抹消
@@ -188,6 +195,7 @@ namespace InfiniteScroll {
         }
 
         /// <summary>項目へスクロール</summary>
+        /// <param name="lockeds">基準項目とオフセット</param>
         public virtual void SetScroll (IEnumerable<(InfiniteScrollItemBase item, float offset)> lockeds) {
             foreach (var locked in lockeds) {
                 if (locked.item != null && _items.IndexOf (locked.item) >= 0) {
@@ -220,7 +228,7 @@ namespace InfiniteScroll {
         public virtual void SetScroll ((InfiniteScrollItemBase item, float offset) point) => SetScroll (_items.Count <= 0 ? null : point.item, point.offset);
 
         /// <summary>項目とそのスクロール変位を取得</summary>
-        /// <param name="index">省略すると表示範囲の中央辺りの項目</param>
+        /// <param name="index">省略すると可視範囲の中央辺りの項目</param>
         /// <returns>項目と現在のスクロール位置に対する項目からのオフセットのタプル</returns>
         public virtual (InfiniteScrollItemBase item, float offset) GetScroll (int index = -1) {
             if (_items.Count <= 0) { return (null, 0f); }
@@ -313,7 +321,7 @@ namespace InfiniteScroll {
             }
         }
 
-        /// <summary>表示範囲の変化を監視</summary>
+        /// <summary>可視範囲の変化を監視</summary>
         protected virtual void CheckVisibleRange () {
             var top = (vertical == m_reverseArrangement ? Scroll : 1f - Scroll) * (ContentSize - ViewportSize);
             var bottom = top + ViewportSize;
@@ -352,10 +360,24 @@ namespace InfiniteScroll {
             }
         }
 
+        /// <summary>ビューポートサイズの変化を監視</summary>
+        protected virtual void CheckViewportSize () {
+            if (_lastViewportSize != viewport.rect.size) {
+                foreach (var component in _components) {
+                    if (component.Index >= 0) {
+                        component.SetSize ();
+                    }
+                }
+                Debug.Log ($"ViewportSize Chaneed: {_lastViewportSize} => {viewport.rect.size}");
+                _lastViewportSize = viewport.rect.size;
+            }
+        }
+
         /// <summary>更新</summary>
-        private void Update () {
+        protected virtual void Update () {
             if (!LockUpdate && _components?.Count > 0 && FirstIndex >= 0) {
                 CheckVisibleRange ();
+                CheckViewportSize ();
             }
         }
 
@@ -372,7 +394,7 @@ namespace InfiniteScroll {
     public abstract class InfiniteScrollItemBase {
 
         /// <summary>
-        /// 実体を生成
+        /// 物理項目を生成
         ///   GameObjectを生成して、InfiniteScrollItemComponentを継承したコンポーネントをアタッチする
         /// </summary>
         /// <returns>生成したGameObjectにアタッチされているコンポーネントを返す</returns>
@@ -384,7 +406,7 @@ namespace InfiniteScroll {
         /// <summary>スクロール方向の位置 (実態へ反映)</summary>
         public virtual float Position { get; protected internal set; }
 
-        /// <summary>スクロール方向のサイズ (実体から反映)</summary>
+        /// <summary>スクロール方向のサイズ (物理項目から反映)</summary>
         public virtual float Size { get; protected internal set; }
 
         /// <summary>内容に変更があった</summary>
@@ -393,10 +415,13 @@ namespace InfiniteScroll {
         /// <summary>コンストラクタ</summary>
         public InfiniteScrollItemBase () { }
 
+        /// <summary>文字列化</summary>
+        public override string ToString () => $"{base.ToString ()}({Position}, {Size}, {Dirty})";
+
     }
 
     /// <summary>
-    /// 実体項目(抽象クラス)
+    /// 物理項目(抽象クラス)
     ///   このクラスを継承したクラスを、Contentに配置するGameObjectにアタッチする
     ///   論理項目と物理項目(これ)を同期する役割を担う
     /// </summary>
@@ -581,12 +606,18 @@ namespace InfiniteScroll {
             //Debug.Log ($"localPosition={RectTransform.localPosition}, pos={pos}");
         }
 
+        /// <summary>文字列化</summary>
+        public override string ToString () => $"{base.ToString ()}({Index}, {Size}, {Item})";
+
     }
 
     /// <summary>項目の寄せ方 (水平/垂直)</summary>
     public enum TextAnchor {
+        /// <summary>下/左</summary>
         LowerLeft = 6,
+        /// <summary>中央</summary>
         MiddleCenter = 4,
+        /// <summary>上/右</summary>
         UpperRight = 2,
     }
 
