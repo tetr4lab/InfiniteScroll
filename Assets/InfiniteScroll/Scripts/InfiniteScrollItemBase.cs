@@ -16,10 +16,7 @@ namespace InfiniteScroll {
         ///   GameObjectを生成して、InfiniteScrollItemComponentを継承したコンポーネントをアタッチする
         /// </summary>
         /// <returns>生成したGameObjectにアタッチされているコンポーネントを返す</returns>
-        public virtual InfiniteScrollItemComponentBase Create (InfiniteScrollRect scrollRect, int index) {
-            var component = InfiniteScrollItemComponentBase.Create (scrollRect, index);
-            return component;
-        }
+        public virtual InfiniteScrollItemComponentBase Create (InfiniteScrollRect scrollRect, int index) => InfiniteScrollItemComponentBase.Create (scrollRect, index);
 
         /// <summary>スクロール方向の位置 (実態へ反映)</summary>
         public virtual float Position { get; protected internal set; }
