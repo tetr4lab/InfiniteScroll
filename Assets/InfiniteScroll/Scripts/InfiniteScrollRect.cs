@@ -132,8 +132,8 @@ namespace InfiniteScroll {
             content.sizeDelta = Vector2.zero;
         }
 
-        /// <summary>アイテムの更新</summary>
-        /// <param name="action">スクロールレクト、項目リスト、可視開始、終了のインデックスを渡すメソッド</param>
+        /// <summary>アイテムの外部更新</summary>
+        /// <param name="action">スクロールレクト、項目リスト、可視開始、終了のインデックスが渡われるメソッド</param>
         public virtual void Modify (Action<InfiniteScrollRect, List<InfiniteScrollItemBase>, int, int> action) {
             var lockBackup = LockUpdate;
             LockUpdate = true;
