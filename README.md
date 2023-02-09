@@ -2,7 +2,7 @@
 title: Unity シンプルな無限スクロール (uGUI)
 tags: Unity C# uGUI
 ---
-# はじめに
+# 概要
 - 「無限」と銘打っていますが、次のような使い方はできません。
   - リストの上端と下端をループさせて、有限長のリストで無限にスクロールする。
   - 動的に生成される不定長のリストを自動的にスクロールする。
@@ -15,7 +15,11 @@ tags: Unity C# uGUI
 - Unity 2021.3.18f1
 - Windows 11
 
-## できること
+## アセットパッケージ
+- [InfiniteScrollRect](./InfiniteScrollRect.unitypackage) 無限スクロールの本体
+- [InfiniteScrollSample](./InfiniteScrollSample.unitypackage) 無限スクロールの使用例
+
+## 機能
 - リスト(`IEnumerable<InfiniteScrollItemBase>`)の登録と初期化
   - 縦スクロール、または、横スクロール
   - 項目に対するパディングとスペーシング
@@ -43,6 +47,7 @@ tags: Unity C# uGUI
   - 配列や`List`(コレクション)として実装されます。
 
 # 導入
+- プロジェクトにアセットパッケージ`InfiniteScrollRect.unitypackage`を導入してください。
 - アセットの本体は`Assets/InfiniteScroll/`にあります。
   - フォルダを移動しても支障ありません。
   - フォルダの中は不用意に触らないようにしてください。
@@ -59,9 +64,10 @@ tags: Unity C# uGUI
 
 # 使い方
 - `InfiniteScrollRect`コンポーネントの`Initialize`に、`InfiniteScrollItemBase`を継承したクラスの配列またはリストを渡します。
-  - より具体的な使い方は、サンプルアセットを参照してください。
-- フォルダ構造
-  - Sample/
+  - このサンプルは、「GUI Text (Legacy)」を使用していますが、`InfiniteScrollRect`がそれに依存するわけではありません。
+  - より具体的な使い方は、サンプルをご参照ください。
+- サンプルを確認するには、アセットパッケージ`InfiniteScrollSample.unitypackage`を導入して、シーン`Assets/Sample/Scenes/InfiniteScrollTest.unity`を開いてください。
+  - Assets/Sample/
     - Resouces/
       - Prefabs/
         - Item.prefab: 物理項目のプレファブ
