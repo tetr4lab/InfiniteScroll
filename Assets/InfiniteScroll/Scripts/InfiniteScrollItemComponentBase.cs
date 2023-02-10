@@ -93,7 +93,7 @@ namespace InfiniteScroll {
 
         /// <summary>更新</summary>
         protected virtual void Update () {
-            if (ScrollRect && !ScrollRect.LockUpdate && Index >= 0) {
+            if (ScrollRect && !ScrollRect.LockedUpdate && Index >= 0) {
                 if (Item.Dirty) {
                     Apply ();
                 }
@@ -115,14 +115,14 @@ namespace InfiniteScroll {
                 for (var i = 0; i < MaxNumberOfLayoutRebuilds; i++) {
                     var lastSize = Size;
                     LayoutRebuilder.ForceRebuildLayoutImmediate (RectTransform);
-                    Debug.Log ($"Items [{Index}].SetSize({i}) {lastSize} => {Size}: controlSize={m_controlChildSize}, localPosition={RectTransform.localPosition}, sizeDelta{RectTransform.sizeDelta}");
+                    Debug.Log ($"[{Time.frameCount}] Items [{Index}].SetSize({i}) {lastSize} => {Size}: controlSize={m_controlChildSize}, localPosition={RectTransform.localPosition}, sizeDelta{RectTransform.sizeDelta}");
                     if (lastSize == Size) {
                         break;
                     }
                 }
                 ScrollRect.AverageItemSize = Size;
             }
-            Debug.Log ($"Items [{Index}].SetSize {Item.Size} => {Size}");
+            Debug.Log ($"[{Time.frameCount}] Items [{Index}].SetSize {Item.Size} => {Size}");
             Item.Size = Size;
         }
 
@@ -190,7 +190,7 @@ namespace InfiniteScroll {
             RectTransform.anchorMax = anchor;
             RectTransform.pivot = anchor;
             RectTransform.anchoredPosition = anchoredPosition;
-            //Debug.Log ($"localPosition={RectTransform.localPosition}, pos={pos}");
+            //Debug.Log ($"[{Time.frameCount}] localPosition={RectTransform.localPosition}, pos={pos}");
         }
 
         /// <summary>文字列化</summary>

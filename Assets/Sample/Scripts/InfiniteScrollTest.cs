@@ -91,6 +91,11 @@ public class InfiniteScrollTest : MonoBehaviour {
         _scroll ??= transform.parent.GetComponentInChildren<InfiniteScrollRect> ();
         var toggles = GetComponentsInChildren<Toggle> ();
         _randomToggle ??= toggles.GetNth (0);
+        _randomToggle?.onValueChanged.AddListener ((isOn) => {
+            // 項目内容の変更による項目サイズの即時変更
+            _scroll.ConvertAll (item => (item as Item).Description = $"{(isOn ? RandomSize (_scroll.vertical) : 128)}\n{(item as Item).Description.Replace ('\n', '↵')}");
+            Debug.Log ($"ItemSize {(isOn ? "randomized" : "fixed")}");
+        });
         _verticalToggle ??= toggles.GetNth (1);
         _reverseToggle ??= toggles.GetNth (2);
         _ctrlSizeToggle ??= toggles.GetNth (3);

@@ -5044,7 +5044,7 @@ MonoBehaviour:
   m_childAlignment: 6
   m_reverseArrangement: 0
   m_controlChildSize: 0
-  m_standardItemSize: 100
+  m_standardItemSize: 128
 --- !u!114 &1850393997
 MonoBehaviour:
   m_ObjectHideFlags: 0

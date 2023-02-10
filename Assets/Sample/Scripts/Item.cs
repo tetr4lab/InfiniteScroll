@@ -8,7 +8,7 @@ public class Item : InfiniteScrollItemBase {
     /// <summary>タイトル</summary>
     public string Title {
         get => _title;
-        protected set {
+        set {
             if (_title != value) {
                 _title = value;
                 Dirty = true;
@@ -20,7 +20,7 @@ public class Item : InfiniteScrollItemBase {
     /// <summary>説明</summary>
     public string Description {
         get => _description;
-        protected set {
+        set {
             if (_description != value) {
                 _description = value;
                 Dirty = true;
@@ -32,7 +32,7 @@ public class Item : InfiniteScrollItemBase {
     /// <summary>アイコン</summary>
     public Sprite Icon {
         get => _icon;
-        protected set {
+        set {
             if (_icon != value) {
                 _icon = value;
                 Dirty = true;
@@ -44,7 +44,7 @@ public class Item : InfiniteScrollItemBase {
     /// <summary>チェックボックスのラベル</summary>
     public string Label {
         get => _label;
-        protected set {
+        set {
             if (_label != value) {
                 _label = value;
                 Dirty = true;
