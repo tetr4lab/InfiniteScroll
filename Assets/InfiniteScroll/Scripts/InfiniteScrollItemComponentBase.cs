@@ -88,7 +88,7 @@ namespace InfiniteScroll {
         /// <summary>リンク中の論理項目</summary>
         public virtual InfiniteScrollItemBase Item => (_index < 0 || _index >= ScrollRect.Count) ? null : ScrollRect [_index];
 
-        /// <summary>論理項目の状態を反映</summary>
+        /// <summary>論理項目のコンテンツを反映</summary>
         protected virtual void Apply () => Item.Dirty = false;
 
         /// <summary>更新</summary>
@@ -98,26 +98,29 @@ namespace InfiniteScroll {
                     Apply ();
                 }
                 if (Item.Size != Size) {
-                    Item.Size = Size;
+                    // サイズが変化した
                     ScrollRect.ResizeRequest = true;
                 }
             }
         }
 
-        /// <summary>項目のサイズ決め</summary>
-        protected internal virtual void SetSize () {
+        /// <summary>物理項目のサイズを確定し論理項目に反映する</summary>
+        protected internal virtual void SetSize (bool calibration = false) {
             if (m_controlChildSize) {
                 RectTransform.sizeDelta = vertical
                     ? new Vector2 (viewportRect.size.x - m_padding.left - m_padding.right, RectTransform.sizeDelta.y)
                     : new Vector2 (RectTransform.sizeDelta.x, viewportRect.size.y - m_padding.top - m_padding.bottom);
             }
-            for (var i = 0; i < MaxNumberOfLayoutRebuilds; i++) {
-                var lastSize = Size;
-                LayoutRebuilder.ForceRebuildLayoutImmediate (RectTransform);
-                Debug.Log ($"Items [{Index}].SetSize({i}) {lastSize} => {Size}: controlSize={m_controlChildSize}, localPosition={RectTransform.localPosition}, sizeDelta{RectTransform.sizeDelta}");
-                if (Mathf.Approximately (lastSize, Size)) {
-                    break;
+            if (calibration) {
+                for (var i = 0; i < MaxNumberOfLayoutRebuilds; i++) {
+                    var lastSize = Size;
+                    LayoutRebuilder.ForceRebuildLayoutImmediate (RectTransform);
+                    Debug.Log ($"Items [{Index}].SetSize({i}) {lastSize} => {Size}: controlSize={m_controlChildSize}, localPosition={RectTransform.localPosition}, sizeDelta{RectTransform.sizeDelta}");
+                    if (lastSize == Size) {
+                        break;
+                    }
                 }
+                ScrollRect.AverageItemSize = Size;
             }
             Debug.Log ($"Items [{Index}].SetSize {Item.Size} => {Size}");
             Item.Size = Size;

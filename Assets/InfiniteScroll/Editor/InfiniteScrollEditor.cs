@@ -102,6 +102,7 @@ namespace InfiniteScroll {
             component.m_childAlignment = (TextAnchor) EditorGUILayout.EnumPopup ("Child Alignment", component.m_childAlignment);
             component.m_reverseArrangement = EditorGUILayout.Toggle ("Reverse Arrangement", component.m_reverseArrangement);
             component.m_controlChildSize = EditorGUILayout.Toggle ("Control Child Size", component.m_controlChildSize);
+            component.m_standardItemSize = EditorGUILayout.FloatField ("Standard Item Size", component.m_standardItemSize);
         }
 
         /// <summary>このスクリプトのパス</summary>

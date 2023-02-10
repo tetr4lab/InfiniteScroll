@@ -33,6 +33,10 @@ namespace InfiniteScroll {
         [SerializeField]
         public bool m_controlChildSize = false;
 
+        /// <summary>項目の標準サイズ</summary>
+        [SerializeField, Range (0f, float.MaxValue)]
+        public float m_standardItemSize = 100f;
+
         /// <summary>有効</summary>
         public virtual bool Valid => Items != null && Components != null;
 
@@ -56,6 +60,21 @@ namespace InfiniteScroll {
 
         /// <summary>物理項目リスト</summary>
         protected virtual List<InfiniteScrollItemComponentBase> Components { get; set; }
+
+        /// <summary>項目の平均サイズ (0以下の値をセットすると初期化される、初期値は標準サイズ)</summary>
+        public virtual float AverageItemSize {
+            get => _averageItemSize;
+            set {
+                if (value <= 0) {
+                    _averageItemSize = m_standardItemSize;
+                    _averageItemCount = 0;
+                } else {
+                    _averageItemSize = (_averageItemSize * _averageItemCount + value) / ++_averageItemCount;
+                }
+            }
+        }
+        protected float _averageItemSize;
+        protected int _averageItemCount;        
 
         /// <summary>更新停止</summary>
         public virtual bool LockUpdate { get; protected set; }
@@ -106,14 +125,15 @@ namespace InfiniteScroll {
                 Items?.Clear ();
                 Components?.Clear ();
             }
+            AverageItemSize = 0;
             FirstIndex = LastIndex = -1;
             Debug.Log ($"hard={hard} {content.sizeDelta}, {viewport.rect.size}");
             content.sizeDelta = Vector2.zero;
         }
 
         /// <summary>アイテムの外部更新</summary>
-        /// <param name="action">スクロールレクト、項目リスト、可視開始、終了のインデックスが渡われるメソッド</param>
-        public virtual void Modify (Action<InfiniteScrollRect, List<InfiniteScrollItemBase>, int, int> action) {
+        /// <param name="modifier">スクロールレクト、項目リスト、可視開始、終了のインデックスが渡われるメソッド</param>
+        public virtual void Modify (Action<InfiniteScrollRect, List<InfiniteScrollItemBase>, int, int> modifier) {
             var lockBackup = LockUpdate;
             LockUpdate = true;
             var first = 0;
@@ -126,15 +146,14 @@ namespace InfiniteScroll {
                 Debug.Log ($"ScrollLocked: {FirstIndex} ({first}) - {LastIndex}, offsets={{{string.Join(",", locked.ConvertAll (l => l.offset))}}}");
             }
             Debug.Log ($"Modify [{Items.Count}]: FirstIndex={FirstIndex}, LastIndex={LastIndex}");
-            action (this, Items, FirstIndex, LastIndex);
+            modifier (this, Items, FirstIndex, LastIndex);
             if (Items.Count > 0) {
                 var lockedOne = locked.Find (l => l.item != null && Items.Contains (l.item));
                 FirstIndex = lockedOne == default ? 0 : Items.IndexOf (lockedOne.item);
-                SetAverageSize (); // 新規の項目にサイズを設定
-                ApplyItems (FirstIndex);
+                LastIndex = -1;
+                ApplyItems ();
                 CalculatePositions ();
                 SetScroll (lockedOne);
-                Release (FirstIndex, LastIndex);
             } else {
                 Clear ();
             }
@@ -170,25 +189,11 @@ namespace InfiniteScroll {
             if (index < 0 || index > Items.Count) { throw new ArgumentOutOfRangeException ("index"); }
             Components = new List<InfiniteScrollItemComponentBase> ();
             FirstIndex = index;
-            ApplyItems (FirstIndex);
-            SetAverageSize ();
+            LastIndex = -1;
+            ApplyItems ();
             CalculatePositions ();
             SetScroll ((Items [FirstIndex], 0));
             Debug.Log ($"Initialized: viewport={viewport.rect.size}, content={content.rect.size}, first={FirstIndex}, last={LastIndex}, Scroll={Scroll}");
-        }
-
-        /// <summary>有効な物理項目の平均サイズを算出して未初期化の論理項目に設定</summary>
-        protected virtual void SetAverageSize () {
-            var averageSize = 0f;
-            var count = 0;
-            Components.ForEach (component => { if (component.Index >= 0) { averageSize += component.Size; count++; } });
-            averageSize /= count;
-            for (var i = 0; i < Items.Count; i++) {
-                if (Items [i].Size <= 0) {
-                    Items [i].Size = averageSize;
-                    Debug.Log ($"Items [{i}].Size={averageSize}");
-                }
-            }
         }
 
         /// <summary>項目へスクロール</summary>
@@ -220,22 +225,27 @@ namespace InfiniteScroll {
         /// <summary>項目の位置とコンテントサイズを算出</summary>
         /// <param name="index">Items.Countを指定するとContentのサイズを返す</param>
         protected virtual void CalculatePositions () {
-            // サイズ校正
+            // 物理項目をチェックしてサイズを校正
             foreach (var component in Components) {
-                if (component.Index >= 0 && component.Size != component.Item.Size) {
-                    component.SetSize ();
+                if (component.Index >= 0 && (component.Size != component.Item.Size)) {
+                    component.SetSize (calibration: true);
                 }
             }
-            // 位置を算出
+            // 論理項目の位置を算出
             float pos = m_reverseArrangement ? (vertical ? m_padding.bottom : m_padding.right) : (vertical ? m_padding.top : m_padding.left);
             for (var i = 0; i < Items.Count; i++) {
-                Items [i].Position = pos;
+                if (Items [i].Position != pos) {
+                    Items [i].Position = pos;
+                }
+                if (Items [i].Size <= 0) {
+                    Items [i].Size = AverageItemSize;
+                }
                 pos += Items [i].Size + m_spacing;
             }
             pos += m_reverseArrangement ? (vertical ? m_padding.top : m_padding.left) : (vertical ? m_padding.bottom : m_padding.right);
             Debug.Log ($"ContentSize: {ContentSize} => {pos}\nCalculateItemPositions:\n{string.Join ("\n", Items.ConvertAll (i => $"Position={i.Position}, Size={i.Size}"))}");
             ContentSize = pos;
-            // 位置を反映
+            // 物理項目に位置を反映
             foreach (var component in Components) {
                 if (component.Index >= 0) {
                     component.SetPosition (component.Item.Position);
@@ -250,47 +260,49 @@ namespace InfiniteScroll {
         protected virtual void Release (int first, int last, bool force = false) => Components.ForEach (c => { if (force || c.Index < first || c.Index > last) { c.Index = -1; } });
 
         /// <summary>論理アイテムを反映する</summary>
-        /// <param name="first">firstもlastも~Indexと同じ場合は既存の実態をクリアして再構築</param>
-        /// <param name="last">firstもlastも~Indexと同じ場合は既存の実態をクリアして再構築</param>
-        protected virtual void ApplyItems (int first, int last = -1) {
-            var rebuild = last < 0;
-            if (rebuild) { last = Items.Count - 1; }
-            Debug.Log ($"ApplyItems: ({FirstIndex}, {LastIndex}) {(rebuild ? "rebuild " : "")}=> ({first}, {last}), ContentSize={ContentSize}, Scroll={Scroll}");
+        /// <param name="first">先頭のインデックス</param>
+        /// <param name="last">与えられなければ既存の実態をクリアして再構築</param>
+        protected virtual void ApplyItems () {
+            var rebuild = LastIndex < 0;
+            if (rebuild) {
+                LastIndex = Items.Count - 1;
+            }
+            Debug.Log ($"ApplyItems: ({FirstIndex}, {LastIndex}) {(rebuild ? "rebuild " : "")}, ContentSize={ContentSize}, Scroll={Scroll}");
             // 解放
-            Release (first, last, rebuild);
+            Release (FirstIndex, LastIndex, rebuild);
             // 割当
-            var pos = - GetScroll (first).offset;
-            for (var i = first; i <= last; i++) {
+            var pos = - GetScroll (FirstIndex).offset;
+            for (var i = FirstIndex; i <= LastIndex; i++) {
                 var component = Components.Find (c => c.Index == i);
                 if (component == null) {
                     component = Components.Find (c => c.Index < 0);
                     if (component != null) {
                         // 再利用
                         component.Index = i;
-                        Debug.Log ($"ApplyItems: Reuse Items [{i}].Size={Items [i].Size}, first={first}, last={last}, ViewportSize={ViewportSize}");
+                        Debug.Log ($"ApplyItems: Reuse Items [{i}].Size={Items [i].Size}, first={FirstIndex}, last={LastIndex}, ViewportSize={ViewportSize}");
                     } else {
                         // 新規
                         component = Items [i].Create (this, i);
-                        component.SetSize ();
                         Components.Add (component);
                         Debug.Log ($"ApplyItems: New Items [{i}].Size={Items [i].Size}");
-                        CalculatePositions ();
                     }
+                    component.SetSize (calibration: true);
+                    CalculatePositions ();
                 } else {
-                    Debug.Log ($"ApplyItems: Exist Items [{i}].Size={Items [i].Size}, first={first}, last={last}, ViewportSize={ViewportSize}");
+                    Debug.Log ($"ApplyItems: Exist Items [{i}].Size={Items [i].Size}, first={FirstIndex}, last={LastIndex}, ViewportSize={ViewportSize}");
                 }
                 if (rebuild) {
+                    if (Items [i].Size <= 0) {
+                        Items [i].Size = AverageItemSize;
+                    }
                     pos += Items [i].Size + m_spacing;
                     Debug.Log ($"ApplyItems [{i}]: pos={pos} {(pos > ViewportSize ? ">" : "<=")} ViewportSize={ViewportSize}");
                     if (pos > ViewportSize) {
                         // 可視端への到達
-                        last = i;
+                        LastIndex = i;
+                        Debug.Log ($"ApplyItems rebuild: first={FirstIndex}, last={LastIndex} => {LastIndex}, ViewportSize={ViewportSize}");
                     }
                 }
-            }
-            if (rebuild && LastIndex != last) {
-                Debug.Log ($"ApplyItems rebuild: first={first}, last={LastIndex} => {last}, ViewportSize={ViewportSize}");
-                LastIndex = last;
             }
         }
 
@@ -310,25 +322,12 @@ namespace InfiniteScroll {
                 }
             }
             if (first >= 0 && (first != FirstIndex || last != LastIndex)) {
-                Debug.Log ($"({FirstIndex}, {LastIndex}) => ({first}, {last}), ({top}, {bottom}): Scroll={Scroll} * (ContentSize={ContentSize} - ViewportSize={ViewportSize})");
+                Debug.Log ($"FolowVisibleRange: ({FirstIndex}, {LastIndex}) => ({first}, {last}), ({top}, {bottom}): Scroll={Scroll} * (ContentSize={ContentSize} - ViewportSize={ViewportSize})");
                 var locked = GetScroll ();
-                ApplyItems (first, last);
-                SetScroll (locked);
                 FirstIndex = first;
                 LastIndex = last;
-            }
-        }
-
-        /// <summary>ビューポートサイズの変化に追従</summary>
-        protected virtual void FolowViewportSize () {
-            if (_lastViewportSize != viewport.rect.size) {
-                foreach (var component in Components) {
-                    if (component.Index >= 0) {
-                        component.SetSize ();
-                    }
-                }
-                Debug.Log ($"ViewportSize Chaneed: {_lastViewportSize} => {viewport.rect.size}");
-                _lastViewportSize = viewport.rect.size;
+                ApplyItems ();
+                SetScroll (locked);
             }
         }
 
@@ -336,13 +335,19 @@ namespace InfiniteScroll {
         protected virtual void Update () {
             if (!LockUpdate && Components?.Count > 0 && FirstIndex >= 0) {
                 if (ResizeRequest) {
+                    // サイズ校正要求
                     var locked = GetScroll ();
                     CalculatePositions ();
                     SetScroll (locked);
                     ResizeRequest = false;
                 }
+                if (_lastViewportSize != viewport.rect.size) {
+                    // ビューポートサイズの変化
+                    Components.ForEach (component => { if (component.Index >= 0) { component.SetSize (); } });
+                    Debug.Log ($"ViewportSize Changed: {_lastViewportSize} => {viewport.rect.size}");
+                    _lastViewportSize = viewport.rect.size;
+                }
                 FolowVisibleRange ();
-                FolowViewportSize ();
             }
         }
 

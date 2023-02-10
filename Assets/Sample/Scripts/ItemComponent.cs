@@ -46,7 +46,7 @@ public class ItemComponent : InfiniteScrollItemComponentBase {
         }
     }
 
-    /// <summary>論理項目の状態を反映</summary>
+    /// <summary>論理項目のコンテンツを反映</summary>
     protected override void Apply () {
         _titleText.text = Item.Title;
         _descriptionText.text = Item.Description;
