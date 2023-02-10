@@ -52,7 +52,7 @@ tags: Unity C# uGUI
   - フォルダを移動しても支障ありません。
   - フォルダの中は不用意に触らないようにしてください。
 - `UI/Scroll View`の代わりに`UI/InfiniteScroll View`を、`UI/ScrollRect`の代わりに`UI/InfiniteScrollRect`を使用します。
-  - 必要に応じて、`ScrollRect`と共通の設定に加えて、`Padding`、`Spacing`、`Child Alignment`、`Reverse Arrangement`、`Control Child Size`を設定してください。
+  - 必要に応じて、`ScrollRect`と共通の設定に加えて、`Padding`、`Spacing`、`Child Alignment`、`Reverse Arrangement`、`Control Child Size`、`Standard Item Size`を設定してください。
   - `Content`には何も置かないでください。
   - スクロール方向は縦/横のどちらかしか選べません。
 - クラス`InfiniteScrollItemBase`を継承したクラスを用意してください。
@@ -113,6 +113,13 @@ tags: Unity C# uGUI
 - インスペクタで設定可能な項目で、初期化の際に使われます。
   - 動的な変更後には再初期化が必要になります。
 
+#### `float m_standardItemSize`
+- アイテムのスクロール方向の標準的なサイズです。
+- 未だ物理項目が作られていない場合に、仮のサイズとして使用します。
+  - 実体に近いサイズに設定することで、表示のガタツキを減らせます。
+- インスペクタで設定可能な項目で、初期化の際に使われます。
+  - 動的な変更後には再初期化が必要になります。
+
 ### プロパティ
 #### `bool Valid`
 - スクロールレクトが有効に初期化されていれば真です。
@@ -148,9 +155,9 @@ tags: Unity C# uGUI
 #### `void Clear ()`
 - 全項目を抹消します。
 
-#### `void Modify (Action<InfiniteScrollRect, List<InfiniteScrollItemBase>, int, int> action)`
+#### `void Modify (Action<InfiniteScrollRect, List<InfiniteScrollItemBase>, int, int> modifier)`
 - 項目リストの書き換えを行います。
-- `action`には、スクロールレクト、論理項目のリスト、表示中の最初の論理項目のインデックス、表示中の最後の論理項目のインデックスが渡されます。
+- `modifier`には、スクロールレクト、論理項目のリスト、表示中の最初の論理項目のインデックス、表示中の最後の論理項目のインデックスが渡されます。
 - 論理項目のリストを自在に更新することができますが、表示中の項目の削除など、変更の内容によってはスクロールが生じます。
 
 ## `class InfiniteScrollItemBase`
@@ -195,3 +202,4 @@ tags: Unity C# uGUI
 
 #### `void Apply ()`
 - 生成直後、および、論理項目の内容に変更があった(`Dirty`)ときに、内容を反映するためのメソッドで、`override`が必要です。
+- 基底クラスのメソッドで`Dirty`が`false`にされます。
