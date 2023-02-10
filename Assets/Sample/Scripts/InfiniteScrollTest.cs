@@ -71,6 +71,14 @@ public class InfiniteScrollTest : MonoBehaviour {
     [SerializeField]
     private Text _debugInfo = default;
 
+    /// <summary>アイテムの数</summary>
+    [SerializeField]
+    private int _numberOfItems = 10;
+
+    /// <summary>最初に表示するインデックス</summary>
+    [SerializeField]
+    private int _firstIndex = default;
+
     /// <summary>論理項目リスト</summary>
     private List<Item> _items;
 
@@ -192,14 +200,20 @@ visible: {(_scroll.FirstIndex < 0 ? "no items" : $"{_scroll.FirstIndex} - {_scro
     public void OnReset () {
         _items.Clear ();
         // 生成
-        for (var i = 0; i < 10; i++) {
+        if (_numberOfItems <= 0) {
+            _numberOfItems = 10;
+        }
+        for (var i = 0; i < _numberOfItems; i++) {
             _scroll.horizontal = !(_scroll.vertical = _verticalToggle.isOn);
             _scroll.m_reverseArrangement = _reverseToggle.isOn;
             _scroll.m_controlChildSize = _ctrlSizeToggle.isOn;
             _scroll.m_childAlignment = _alignDict [_alignDropdown.value];
             _items.Add (new Item ($"No. {i}", $"{(_randomToggle.isOn ? $"{RandomSize (_scroll.vertical)}\n" : "")}start of {i}\nend of {i}", label: $"check {i}"));
         }
-        _scroll.Initialize (_items);
+        if (_firstIndex < 0 || _firstIndex >= _numberOfItems) {
+            _firstIndex = 0;
+        }
+        _scroll.Initialize (_items, _firstIndex);
         Debug.Log ($"Initialized {{{string.Join (", ", _scroll.ConvertAll (i => i.ToString ()))}}}");
     }
 

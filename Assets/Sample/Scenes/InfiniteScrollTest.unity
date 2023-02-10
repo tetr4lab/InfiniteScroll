@@ -2545,8 +2545,11 @@ MonoBehaviour:
   _addButton: {fileID: 0}
   _insertButton: {fileID: 0}
   _removeButton: {fileID: 0}
+  _removeCheckedButton: {fileID: 0}
   _clearButton: {fileID: 0}
   _debugInfo: {fileID: 0}
+  _numberOfItems: 10
+  _firstIndex: 3
 --- !u!114 &683904996
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5033,14 +5036,15 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_padding:
-    m_Left: 0
-    m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
-  m_spacing: 0
+    m_Left: 4
+    m_Right: 4
+    m_Top: 8
+    m_Bottom: 8
+  m_spacing: 4
   m_childAlignment: 6
   m_reverseArrangement: 0
   m_controlChildSize: 0
+  m_standardItemSize: 100
 --- !u!114 &1850393997
 MonoBehaviour:
   m_ObjectHideFlags: 0
