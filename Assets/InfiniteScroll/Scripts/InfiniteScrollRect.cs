@@ -257,7 +257,7 @@ namespace InfiniteScroll {
         /// <param name="first">保全範囲開始</param>
         /// <param name="last">保全範囲終了</param>
         /// <param name="force">範囲を無視して全解放</param>
-        protected virtual void Release (int first, int last, bool force = false) => Components.ForEach (c => { if (force || c.Index < first || c.Index > last) { c.Index = -1; } });
+        protected virtual void ReleaseItems (int first, int last, bool force = false) => Components.ForEach (c => { if (force || c.Index < first || c.Index > last) { c.Index = -1; } });
 
         /// <summary>論理アイテムを反映する</summary>
         /// <param name="first">先頭のインデックス</param>
@@ -269,7 +269,7 @@ namespace InfiniteScroll {
             }
             Debug.Log ($"ApplyItems: ({FirstIndex}, {LastIndex}) {(rebuild ? "rebuild " : "")}, ContentSize={ContentSize}, Scroll={Scroll}");
             // 解放
-            Release (FirstIndex, LastIndex, rebuild);
+            ReleaseItems (FirstIndex, LastIndex, rebuild);
             // 割当
             var pos = - GetScroll (FirstIndex).offset;
             for (var i = FirstIndex; i <= LastIndex; i++) {
