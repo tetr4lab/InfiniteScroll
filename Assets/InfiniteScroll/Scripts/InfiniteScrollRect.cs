@@ -127,7 +127,6 @@ namespace InfiniteScroll {
             }
             AverageItemSize = 0;
             FirstIndex = LastIndex = -1;
-            Debug.Log ($"[{Time.frameCount}] hard={hard} {content.sizeDelta}, {viewport.rect.size}");
             content.sizeDelta = Vector2.zero;
         }
 
@@ -143,9 +142,7 @@ namespace InfiniteScroll {
                     locked.Add (GetScroll (i));
                 }
                 first = Items.IndexOf (locked [0].item);
-                Debug.Log ($"[{Time.frameCount}] ScrollLocked: {FirstIndex} ({first}) - {LastIndex}, offsets={{{string.Join(",", locked.ConvertAll (l => l.offset))}}}");
             }
-            Debug.Log ($"[{Time.frameCount}] Modify [{Items.Count}]: FirstIndex={FirstIndex}, LastIndex={LastIndex}");
             modifier (this, Items, FirstIndex, LastIndex);
             if (Items.Count > 0) {
                 var lockedOne = locked.Find (l => l.item != null && Items.Contains (l.item));
@@ -193,7 +190,6 @@ namespace InfiniteScroll {
             ApplyItems ();
             CalculatePositions ();
             SetScroll ((Items [FirstIndex], 0));
-            Debug.Log ($"[{Time.frameCount}] Initialized: viewport={viewport.rect.size}, content={content.rect.size}, first={FirstIndex}, last={LastIndex}, Scroll={Scroll}");
         }
 
         /// <summary>項目へスクロール</summary>
@@ -204,7 +200,6 @@ namespace InfiniteScroll {
                 return;
             }
             var scroll = (point.item.Position + point.offset) / (ContentSize - ViewportSize);
-            Debug.Log ($"[{Time.frameCount}] SetScroll Items [{Items.IndexOf (point.item)}] offset={point.offset}, Scroll={Scroll} => {((vertical == m_reverseArrangement) ? scroll : 1f - scroll)} ({scroll})");
             Scroll = (vertical == m_reverseArrangement) ? scroll : 1f - scroll;
         }
 
@@ -218,7 +213,6 @@ namespace InfiniteScroll {
                 index = Mathf.Clamp ((FirstIndex + LastIndex) / 2, 0, Items.Count - 1);
             }
             var offset = ContentSize < ViewportSize ? 0f : (vertical == m_reverseArrangement ? Scroll : 1f - Scroll) * (ContentSize - ViewportSize);
-            Debug.Log ($"[{Time.frameCount}] ScrollLocked Items [{index}] offset={offset}, FirstIndex={FirstIndex}, LastIndex={LastIndex}");
             return (Items [index], offset - Items [index].Position);
         }
 
@@ -243,7 +237,6 @@ namespace InfiniteScroll {
                 pos += Items [i].Size + m_spacing;
             }
             pos += m_reverseArrangement ? (vertical ? m_padding.top : m_padding.left) : (vertical ? m_padding.bottom : m_padding.right);
-            Debug.Log ($"[{Time.frameCount}] ContentSize: {ContentSize} => {pos}\nCalculateItemPositions:\n{string.Join ("\n", Items.ConvertAll (i => $"Position={i.Position}, Size={i.Size}"))}");
             ContentSize = pos;
             // 物理項目に位置を反映
             foreach (var component in Components) {
@@ -273,7 +266,6 @@ namespace InfiniteScroll {
             if (rebuild) {
                 LastIndex = Items.Count - 1;
             }
-            Debug.Log ($"[{Time.frameCount}] ApplyItems: ({FirstIndex}, {LastIndex}) {(rebuild ? "rebuild " : "")}, ContentSize={ContentSize}, Scroll={Scroll}");
             // 解放
             ReleaseItems (FirstIndex, LastIndex, rebuild);
             // 割当
@@ -285,28 +277,22 @@ namespace InfiniteScroll {
                     if (component != null) {
                         // 再利用
                         component.Index = i;
-                        Debug.Log ($"[{Time.frameCount}] ApplyItems: Reuse Items [{i}].Size={Items [i].Size}, first={FirstIndex}, last={LastIndex}, ViewportSize={ViewportSize}");
                     } else {
                         // 新規
                         component = Items [i].Create (this, i);
                         Components.Add (component);
-                        Debug.Log ($"[{Time.frameCount}] ApplyItems: New Items [{i}].Size={Items [i].Size}");
                     }
                     component.SetSize (calibration: true);
                     CalculatePositions ();
-                } else {
-                    Debug.Log ($"[{Time.frameCount}] ApplyItems: Exist Items [{i}].Size={Items [i].Size}, first={FirstIndex}, last={LastIndex}, ViewportSize={ViewportSize}");
                 }
                 if (rebuild) {
                     if (Items [i].Size <= 0) {
                         Items [i].Size = AverageItemSize;
                     }
                     pos += Items [i].Size + m_spacing;
-                    Debug.Log ($"[{Time.frameCount}] ApplyItems [{i}]: pos={pos} {(pos > ViewportSize ? ">" : "<=")} ViewportSize={ViewportSize}");
                     if (pos > ViewportSize) {
                         // 可視端への到達
                         LastIndex = i;
-                        Debug.Log ($"[{Time.frameCount}] ApplyItems rebuild: first={FirstIndex}, last={LastIndex} => {LastIndex}, ViewportSize={ViewportSize}");
                     }
                 }
             }
@@ -324,11 +310,9 @@ namespace InfiniteScroll {
                     if (first < 0) {
                         first = i;
                     }
-                    //Debug.Log ($"[{Time.frameCount}] Items [{i}] {first}-{last}: Position={_items [i].Position}, Size={_items [i].Size}, top={top}, bottom={bottom}, Scroll={Scroll} * (ContentSize={ContentSize} - ViewportSize={ViewportSize})");
                 }
             }
             if (first >= 0 && (first != FirstIndex || last != LastIndex)) {
-                Debug.Log ($"[{Time.frameCount}] FolowVisibleRange: ({FirstIndex}, {LastIndex}) => ({first}, {last}), ({top}, {bottom}): Scroll={Scroll} * (ContentSize={ContentSize} - ViewportSize={ViewportSize})");
                 var locked = GetScroll ();
                 FirstIndex = first;
                 LastIndex = last;
@@ -342,7 +326,6 @@ namespace InfiniteScroll {
             if (!LockedUpdate && Components?.Count > 0 && FirstIndex >= 0) {
                 if (ResizeRequest) {
                     // 要求に応じてサイズ校正
-                    Debug.Log ($"[{Time.frameCount}] Accept ResizeRequest");
                     var locked = GetScroll ();
                     CalculatePositions ();
                     SetScroll (locked);
@@ -354,7 +337,6 @@ namespace InfiniteScroll {
                             component.SetSize ();
                         }
                     }
-                    Debug.Log ($"[{Time.frameCount}] ViewportSize Changed: {_lastViewportSize} => {viewport.rect.size}");
                     _lastViewportSize = viewport.rect.size;
                 }
                 FolowVisibleRange ();
