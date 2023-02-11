@@ -16,8 +16,8 @@ tags: Unity C# uGUI
 - Windows 11
 
 ## アセットパッケージ
-- [InfiniteScrollRect](./InfiniteScrollRect.unitypackage) 無限スクロールの本体
-- [InfiniteScrollSample](./InfiniteScrollSample.unitypackage) 無限スクロールの使用例
+- [InfiniteScrollRect](./InfiniteScrollRect.unitypackage?raw=true) 無限スクロールの本体
+- [InfiniteScrollSample](./InfiniteScrollSample.unitypackage?raw=true) 無限スクロールの使用例
 
 ## 機能
 - リスト(`IEnumerable<InfiniteScrollItemBase>`)の登録と初期化
