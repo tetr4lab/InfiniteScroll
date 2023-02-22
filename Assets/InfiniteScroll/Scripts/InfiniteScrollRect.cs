@@ -41,22 +41,22 @@ namespace InfiniteScroll {
         public virtual bool Valid => Items != null && Components != null;
 
         /// <summary>論理項目リストへのアクセス</summary>
-        public virtual ReadOnlyCollection<InfiniteScrollItemBase> AsReadOnly () => Items.AsReadOnly ();
+        public virtual ReadOnlyCollection<IInfiniteScrollItem> AsReadOnly () => Items.AsReadOnly ();
 
         /// <summary>論理項目の絞り込み</summary>
-        public virtual List<InfiniteScrollItemBase> FindAll (Predicate<InfiniteScrollItemBase> match) => Items.FindAll (match);
+        public virtual List<IInfiniteScrollItem> FindAll (Predicate<IInfiniteScrollItem> match) => Items.FindAll (match);
 
         /// <summary>論理項目リストの変換</summary>
-        public virtual List<TOutput> ConvertAll<TOutput> (Converter<InfiniteScrollItemBase, TOutput> converter) => Items.ConvertAll (converter);
+        public virtual List<TOutput> ConvertAll<TOutput> (Converter<IInfiniteScrollItem, TOutput> converter) => Items.ConvertAll (converter);
 
         /// <summary>論理項目へのアクセス</summary>
-        public virtual InfiniteScrollItemBase this [int index] => Items [index];
+        public virtual IInfiniteScrollItem this [int index] => Items [index];
 
         /// <summary>論理項目数</summary>
         public virtual int Count => Valid ? Items.Count : 0;
 
         /// <summary>論理項目リスト</summary>
-        protected virtual List<InfiniteScrollItemBase> Items { get; set; }
+        protected virtual List<IInfiniteScrollItem> Items { get; set; }
 
         /// <summary>物理項目リスト</summary>
         protected virtual List<InfiniteScrollItemComponentBase> Components { get; set; }
@@ -132,11 +132,11 @@ namespace InfiniteScroll {
 
         /// <summary>アイテムの外部更新</summary>
         /// <param name="modifier">スクロールレクト、項目リスト、可視開始、終了のインデックスが渡われるメソッド</param>
-        public virtual void Modify (Action<InfiniteScrollRect, List<InfiniteScrollItemBase>, int, int> modifier) {
+        public virtual void Modify (Action<InfiniteScrollRect, List<IInfiniteScrollItem>, int, int> modifier) {
             var lockBackup = LockedUpdate;
             LockedUpdate = true;
             var first = 0;
-            var locked = new List<(InfiniteScrollItemBase item, float offset)> ();
+            var locked = new List<(IInfiniteScrollItem item, float offset)> ();
             if (FirstIndex >= 0) {
                 for (var i = FirstIndex; i <= LastIndex; i++) {
                     locked.Add (GetScroll (i));
@@ -160,7 +160,7 @@ namespace InfiniteScroll {
         /// <summary>初期化</summary>
         /// <param name="items">項目のリスト</param>
         /// <param name="index">最初に表示する項目</param>
-        public virtual void Initialize (IEnumerable<InfiniteScrollItemBase> items, int index = 0) {
+        public virtual void Initialize (IEnumerable<IInfiniteScrollItem> items, int index = 0) {
             if (items == null) { throw new ArgumentNullException ("items"); }
             // 抹消
             Clear (true);
@@ -182,7 +182,7 @@ namespace InfiniteScroll {
             }
             LayoutRebuilder.ForceRebuildLayoutImmediate (transform as RectTransform);
             // 生成
-            Items = new List<InfiniteScrollItemBase> (items);
+            Items = new List<IInfiniteScrollItem> (items);
             if (index < 0 || index > Items.Count) { throw new ArgumentOutOfRangeException ("index"); }
             Components = new List<InfiniteScrollItemComponentBase> ();
             FirstIndex = index;
@@ -194,7 +194,7 @@ namespace InfiniteScroll {
 
         /// <summary>項目へスクロール</summary>
         /// <param name="point">基準項目とオフセットのタプル</param>
-        public virtual void SetScroll ((InfiniteScrollItemBase item, float offset) point) {
+        public virtual void SetScroll ((IInfiniteScrollItem item, float offset) point) {
             if (point.item == null || !Items.Contains (point.item)) {
                 Scroll = (vertical == m_reverseArrangement) ? 0f : 1f;
                 return;
@@ -207,7 +207,7 @@ namespace InfiniteScroll {
         /// <summary>項目とそのスクロール変位を取得</summary>
         /// <param name="index">省略すると可視範囲の中央辺りの項目</param>
         /// <returns>項目と現在のスクロール位置に対する項目からのオフセットのタプル</returns>
-        public virtual (InfiniteScrollItemBase item, float offset) GetScroll (int index = -1) {
+        public virtual (IInfiniteScrollItem item, float offset) GetScroll (int index = -1) {
             if (Items.Count <= 0) { return (null, 0f); }
             if (index < 0 || index >= Items.Count) {
                 index = Mathf.Clamp ((FirstIndex + LastIndex) / 2, 0, Items.Count - 1);

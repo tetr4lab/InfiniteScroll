@@ -86,7 +86,7 @@ namespace InfiniteScroll {
         protected int _index;
 
         /// <summary>リンク中の論理項目</summary>
-        public virtual InfiniteScrollItemBase Item => (_index < 0 || _index >= ScrollRect.Count) ? null : ScrollRect [_index];
+        public virtual IInfiniteScrollItem Item => (_index < 0 || _index >= ScrollRect.Count) ? null : ScrollRect [_index];
 
         /// <summary>論理項目のコンテンツを反映</summary>
         protected virtual void Apply () => Item.Dirty = false;

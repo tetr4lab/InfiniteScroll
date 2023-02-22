@@ -3,7 +3,16 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>論理アイテム</summary>
-public class Item : InfiniteScrollItemBase {
+public class Item : IInfiniteScrollItem {
+
+    /// <summary>スクロール方向の位置 (実態へ反映)</summary>
+    public float Position { get; set; }
+
+    /// <summary>スクロール方向のサイズ (物理項目から反映)</summary>
+    public float Size { get; set; }
+
+    /// <summary>内容に変更があった</summary>
+    public bool Dirty { get; set; }
 
     /// <summary>タイトル</summary>
     public string Title {
@@ -76,6 +85,10 @@ public class Item : InfiniteScrollItemBase {
 
     /// <summary>実体を生成</summary>
     /// <returns>生成したオブジェクトにアタッチされているコンポーネントを返す</returns>
-    public override InfiniteScrollItemComponentBase Create (InfiniteScrollRect scrollRect, int index) => ItemComponent.Create (scrollRect, index);
+    public InfiniteScrollItemComponentBase Create (InfiniteScrollRect scrollRect, int index) => ItemComponent.Create (scrollRect, index);
+
+
+    /// <summary>文字列化</summary>
+    public override string ToString () => $"{base.ToString ()}({Position}, {Size}, {Dirty})";
 
 }

@@ -12,7 +12,7 @@ tags: Unity C# uGUI
   - 固定長だが長大なリストを扱う際に、可視範囲外の`GameObject`を節約する。
 
 ## テスト環境
-- Unity 2021.3.18f1
+- Unity 2021.3.19f1
 - Windows 11
 
 ## アセットパッケージ
@@ -20,13 +20,13 @@ tags: Unity C# uGUI
 - [InfiniteScrollSample](./InfiniteScrollSample.unitypackage?raw=true) 無限スクロールの使用例
 
 ## 機能
-- リスト(`IEnumerable<InfiniteScrollItemBase>`)の登録と初期化
+- リスト(`IEnumerable<IInfiniteScrollItem>`)の登録と初期化
   - 縦スクロール、または、横スクロール
   - 項目に対するパディングとスペーシング
   - スクロールに直行する方向の項目制御(下/左寄せ、中央寄せ、上/右寄せ、拡縮Fit)
   - 項目の並び順の反転
 - スクロール方向に可変長の項目サイズ
-- 項目リスト(`List<InfiniteScrollItemBase>`)への任意の操作
+- 項目リスト(`List<IInfiniteScrollItem>`)への任意の操作
 - `UnityEngine.UI.ScrollRect`の主要な機能
 
 ## 概念
@@ -55,15 +55,15 @@ tags: Unity C# uGUI
   - 必要に応じて、`ScrollRect`と共通の設定に加えて、`Padding`、`Spacing`、`Child Alignment`、`Reverse Arrangement`、`Control Child Size`、`Standard Item Size`を設定してください。
   - `Content`には何も置かないでください。
   - スクロール方向は縦/横のどちらかしか選べません。
-- クラス`InfiniteScrollItemBase`を継承したクラスを用意してください。
-  - `Create ()`を`override`するメソッドの他に、コンストラクタを実装してください。
+- インターフェイス`IInfiniteScrollItem`を継承したクラスを用意してください。
+  - 必須のメソッドとプロパティの他に、コンストラクタなどを実装してください。
 - クラス`InfiniteScrollItemComponentBase`を継承したクラスを用意してください。
   - `static Create ()`を置き換える(`new`)メソッドを実装してください。
     - このメソッドで項目の実体を生成するために、必要に応じて、クラスをアタッチしたプレファブを用意してください。
   - `Initialize ()`、`Apply ()`を`override`するメソッドの他に、`Item`プロパティを実装してください。
 
 # 使い方
-- `InfiniteScrollRect`コンポーネントの`Initialize`に、`InfiniteScrollItemBase`を継承したクラスの配列またはリストを渡します。
+- `InfiniteScrollRect`コンポーネントの`Initialize`に、`IInfiniteScrollItem`を継承したクラスの配列またはリストを渡します。
   - このサンプルは、「GUI Text (Legacy)」を使用していますが、`InfiniteScrollRect`がそれに依存するわけではありません。
   - より具体的な使い方は、サンプルをご参照ください。
 - サンプルを確認するには、アセットパッケージ`InfiniteScrollSample.unitypackage`を導入して、シーン`Assets/Sample/Scenes/InfiniteScrollTest.unity`を開いてください。
@@ -75,7 +75,7 @@ tags: Unity C# uGUI
       - InfiniteScrollTest.unity: サンプルシーン
     - Scripts/
       - InfiniteScrollTest.cs: サンプルメイン
-      - Item.cs: `InfiniteScrollItemBase`を継承した論理項目クラス
+      - Item.cs: `IInfiniteScrollItem`を継承した論理項目クラス
       - ItemComponent.cs: `InfiniteScrollItemComponentBase`を継承した物理項目クラス
 
 # 主なAPI
@@ -124,7 +124,7 @@ tags: Unity C# uGUI
 #### `bool Valid`
 - スクロールレクトが有効に初期化されていれば真です。
 
-#### `InfiniteScrollItemBase this [int index]`
+#### `IInfiniteScrollItem this [int index]`
 - 論理項目リストにアクセスするインデクサです。
 
 #### `int Count`
@@ -137,33 +137,33 @@ tags: Unity C# uGUI
 - 表示中の最後の論理項目のインデックスです。
 
 ### メソッド
-#### `void Initialize (IEnumerable<InfiniteScrollItemBase> items, int index = 0)`
+#### `void Initialize (IEnumerable<IInfiniteScrollItem> items, int index = 0)`
 - 論理項目のリスト`items`を渡してスクロールレクトを初期化します。
   - `index`は最初に表示する項目のインデックスです。
 - インスペクタで設定可能なシリアライズ・フィールドは、あらかじめ設定しておく必要があります。
   - シリアライズフィールドの変更後には再初期化が必要になります。
 
-#### `ReadOnlyCollection<InfiniteScrollItemBase> AsReadOnly ()`
+#### `ReadOnlyCollection<IInfiniteScrollItem> AsReadOnly ()`
 - 内部の論理項目リストにアクセスします。
 
-#### `List<InfiniteScrollItemBase> FindAll (Predicate<InfiniteScrollItemBase> match)`
+#### `List<IInfiniteScrollItem> FindAll (Predicate<IInfiniteScrollItem> match)`
 - 条件に合う論理項目を抽出したリストを返します。
 
-#### `List<TOutput> ConvertAll<TOutput> (Converter<InfiniteScrollItemBase, TOutput> converter)`
+#### `List<TOutput> ConvertAll<TOutput> (Converter<IInfiniteScrollItem, TOutput> converter)`
 - 論理項目を変換したリストを返します。
 
 #### `void Clear ()`
 - 全項目を抹消します。
 
-#### `void Modify (Action<InfiniteScrollRect, List<InfiniteScrollItemBase>, int, int> modifier)`
+#### `void Modify (Action<InfiniteScrollRect, List<IInfiniteScrollItem>, int, int> modifier)`
 - 項目リストの書き換えを行います。
 - `modifier`には、スクロールレクト、論理項目のリスト、表示中の最初の論理項目のインデックス、表示中の最後の論理項目のインデックスが渡されます。
 - 論理項目のリストを自在に更新することができますが、表示中の項目の削除など、変更の内容によってはスクロールが生じます。
 
-## `class InfiniteScrollItemBase`
-- 論理アイテムのベースとなる抽象クラスです。
-- このクラスを継承したクラスを作成して、論理項目リスト`List<InfiniteScrollItemBase>`として使用します。
-  - `Create ()`の`override`は必須で、他にコンストラクタを実装する必要があります。
+## `Interface IInfiniteScrollItem`
+- 論理アイテムのベースとなるインターフェイスです。
+- このクラスを継承したクラスを作成して、論理項目リスト`List<IInfiniteScrollItem>`として使用します。
+  - メソッド`Create ()`といくつかのプロパティは必須で、他にコンストラクタなどを実装します。
 
 ### プロパティ
 #### `float Position`
