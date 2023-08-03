@@ -26,33 +26,33 @@ public class ItemComponent : InfiniteScrollItemComponentBase {
     /// <summary>初期化</summary>
     protected override void Initialize () {
         var texts = GetComponentsInChildren<Text> ();
-        if (_titleText == default && texts.Length > 0) {
-            _titleText = texts [0];
+        if (titleText == default && texts.Length > 0) {
+            titleText = texts [0];
         }
-        if (_descriptionText == default && texts.Length > 1) {
-            _descriptionText = texts [1];
+        if (descriptionText == default && texts.Length > 1) {
+            descriptionText = texts [1];
         }
-        if (_checkBoxLabelText == default && texts.Length > 2) {
-            _checkBoxLabelText = texts [2];
+        if (checkBoxLabelText == default && texts.Length > 2) {
+            checkBoxLabelText = texts [2];
         }
-        if (_iconImage == default) {
-            _iconImage = GetComponentInChildren<Image> ();
+        if (iconImage == default) {
+            iconImage = GetComponentInChildren<Image> ();
         }
-        if (_checkBoxToggle == default) {
-            _checkBoxToggle = GetComponentInChildren<Toggle> ();
+        if (checkBoxToggle == default) {
+            checkBoxToggle = GetComponentInChildren<Toggle> ();
         }
-        if (_checkBoxToggle) {
-            _checkBoxToggle.onValueChanged.AddListener (isOn => Item.Check = isOn);
+        if (checkBoxToggle) {
+            checkBoxToggle.onValueChanged.AddListener (isOn => Item.Check = isOn);
         }
     }
 
     /// <summary>論理項目のコンテンツを反映</summary>
     protected override void Apply () {
-        _titleText.text = Item.Title;
-        _descriptionText.text = Item.Description;
-        _iconImage.sprite = Item.Icon;
-        _checkBoxLabelText.text = Item.Label;
-        _checkBoxToggle.isOn = Item.Check;
+        titleText.text = Item.Title;
+        descriptionText.text = Item.Description;
+        iconImage.sprite = Item.Icon;
+        checkBoxLabelText.text = Item.Label;
+        checkBoxToggle.isOn = Item.Check;
         base.Apply ();
         // 乱数をサイズに反映
         if (int.TryParse (Item.Description.Split ('\n')[0], out var size)) {
@@ -65,22 +65,22 @@ public class ItemComponent : InfiniteScrollItemComponentBase {
 
     /// <summary>タイトルテキスト</summary>
     [SerializeField]
-    private Text _titleText = default;
+    private Text titleText = default;
 
     /// <summary>説明テキスト</summary>
     [SerializeField]
-    private Text _descriptionText = default;
+    private Text descriptionText = default;
 
     /// <summary>アイコンイメージ</summary>
     [SerializeField]
-    private Image _iconImage = default;
+    private Image iconImage = default;
 
     /// <summary>チェックボックスのトグル</summary>
     [SerializeField]
-    private Toggle _checkBoxToggle = default;
+    private Toggle checkBoxToggle = default;
 
     /// <summary>チェックボックスのラベルテキスト</summary>
     [SerializeField]
-    private Text _checkBoxLabelText = default;
+    private Text checkBoxLabelText = default;
 
 }

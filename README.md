@@ -83,37 +83,37 @@ tags: Unity C# uGUI
 - `UnityEngine.UI.ScrollRect`を継承したコンポーネント・クラスです。
 
 ### フィールド
-#### `RectOffset m_padding`
+#### `RectOffset padding`
 - `Content`と項目の間の隙間のサイズです。
 - インスペクタで設定可能な項目で、初期化の際に使われます。
   - 動的な変更後には再初期化が必要になります。
 
-#### `float m_spacing`
+#### `float spacing`
 - 項目間の隙間のサイズです。
 - インスペクタで設定可能な項目で、初期化の際に使われます。
   - 動的な変更後には再初期化が必要になります。
 
-#### `TextAnchor m_childAlignment`
+#### `TextAnchor childAlignment`
 - スクロールに直行する方向の項目の整列制御です。
   - 下/左寄せ、中央寄せ、上/右寄せ
-  - `m_controlChildSize`が真の時は効果がありません。
+  - `controlChildSize`が真の時は効果がありません。
 - インスペクタで設定可能な項目で、初期化の際に使われます。
   - 動的な変更後には再初期化が必要になります。
 
-#### `bool m_reverseArrangement`
+#### `bool reverseArrangement`
 - 項目の並び順を逆にします。
   - 偽だと、上から下、左から右になります。
   - 真だと、下から上、右から左になります。
 - インスペクタで設定可能な項目で、初期化の際に使われます。
   - 動的な変更後には再初期化が必要になります。
 
-#### `bool m_controlChildSize`
+#### `bool controlChildSize`
 - スクロールに直行する方向の項目の拡大制御です。
-  - 真だと、項目が幅いっぱいに拡大されて、`m_childAlignment`の設定は無効になります。
+  - 真だと、項目が幅いっぱいに拡大されて、`childAlignment`の設定は無効になります。
 - インスペクタで設定可能な項目で、初期化の際に使われます。
   - 動的な変更後には再初期化が必要になります。
 
-#### `float m_standardItemSize`
+#### `float standardItemSize`
 - アイテムのスクロール方向の標準的なサイズです。
 - 未だ物理項目が作られていない場合に、仮のサイズとして使用します。
   - 実体に近いサイズに設定することで、表示のガタツキを減らせます。

@@ -41,16 +41,16 @@ namespace InfiniteScroll {
                 eventSystem.AddComponent<StandaloneInputModule> ();
                 eventSystem.transform.SetParent (eventSystem.transform);
             }
-            if (_prefab == null) {
+            if (prefab == null) {
                 // プレファブをロード
                 var path = Path.GetDirectoryName (Path.GetDirectoryName (ThisScriptPath ())); // スクリプトのひとつ上のフォルダから辿る
-                _prefab = AssetDatabase.LoadAssetAtPath<GameObject> (Path.Combine (path, "Prefabs/InfiniteScroll View.prefab"));
+                prefab = AssetDatabase.LoadAssetAtPath<GameObject> (Path.Combine (path, "Prefabs/InfiniteScroll View.prefab"));
             }
-            if (_prefab != null) {
+            if (prefab != null) {
                 // プレファブから生成
                 try {
                     AssetDatabase.StartAssetEditing ();
-                    var root = Instantiate (_prefab, parent.transform);
+                    var root = Instantiate (prefab, parent.transform);
                     root.transform.SetParent ((parent ?? root).transform); // 親がないなら自身を親に
                     root.name = "InfiniteScroll View";
                     Undo.RegisterCreatedObjectUndo (root, "Create InfiniteScrollRect");
@@ -67,10 +67,10 @@ namespace InfiniteScroll {
         }
 
         /// <summary>プレファブ</summary>
-        private static GameObject _prefab;
+        private static GameObject prefab;
 
         /// <summary>前回の垂直側トグル状態</summary>
-        private bool _lastVertical;
+        private bool lastVertical;
 
         /// <summary>Paddingのトグル状態</summary>
         protected static bool PaddingFoldoutToggle;
@@ -82,27 +82,27 @@ namespace InfiniteScroll {
             Undo.RecordObject (component, "Edit InfiniteScrollRect");
             if (component.horizontal == component.vertical) {
                 // トグルが変更されたら前回と逆にする (垂直と水平のトグルをラジオボタン化)
-                component.horizontal = _lastVertical;
-                component.vertical = !_lastVertical;
+                component.horizontal = lastVertical;
+                component.vertical = !lastVertical;
             }
             // 最後の状態を記録
-            _lastVertical = component.vertical;
+            lastVertical = component.vertical;
             // 追加項目
             PaddingFoldoutToggle = EditorGUILayout.BeginFoldoutHeaderGroup (PaddingFoldoutToggle, "Padding");
             if (PaddingFoldoutToggle) {
                 EditorGUI.indentLevel++;
-                component.m_padding.left = EditorGUILayout.IntField ("Left", component.m_padding.left);
-                component.m_padding.right = EditorGUILayout.IntField ("Right", component.m_padding.right);
-                component.m_padding.top = EditorGUILayout.IntField ("Top", component.m_padding.top);
-                component.m_padding.bottom = EditorGUILayout.IntField ("Bottom", component.m_padding.bottom);
+                component.padding.left = EditorGUILayout.IntField ("Left", component.padding.left);
+                component.padding.right = EditorGUILayout.IntField ("Right", component.padding.right);
+                component.padding.top = EditorGUILayout.IntField ("Top", component.padding.top);
+                component.padding.bottom = EditorGUILayout.IntField ("Bottom", component.padding.bottom);
                 EditorGUI.indentLevel--;
             }
             EditorGUILayout.EndFoldoutHeaderGroup ();
-            component.m_spacing = EditorGUILayout.FloatField ("Spacing", component.m_spacing);
-            component.m_childAlignment = (TextAnchor) EditorGUILayout.EnumPopup ("Child Alignment", component.m_childAlignment);
-            component.m_reverseArrangement = EditorGUILayout.Toggle ("Reverse Arrangement", component.m_reverseArrangement);
-            component.m_controlChildSize = EditorGUILayout.Toggle ("Control Child Size", component.m_controlChildSize);
-            component.m_standardItemSize = EditorGUILayout.FloatField ("Standard Item Size", component.m_standardItemSize);
+            component.spacing = EditorGUILayout.FloatField ("Spacing", component.spacing);
+            component.childAlignment = (TextAnchor) EditorGUILayout.EnumPopup ("Child Alignment", component.childAlignment);
+            component.reverseArrangement = EditorGUILayout.Toggle ("Reverse Arrangement", component.reverseArrangement);
+            component.controlChildSize = EditorGUILayout.Toggle ("Control Child Size", component.controlChildSize);
+            component.standardItemSize = EditorGUILayout.FloatField ("Standard Item Size", component.standardItemSize);
         }
 
         /// <summary>このスクリプトのパス</summary>

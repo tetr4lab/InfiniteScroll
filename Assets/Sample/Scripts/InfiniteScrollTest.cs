@@ -9,131 +9,131 @@ public class InfiniteScrollTest : MonoBehaviour {
 
     /// <summary>無限スクロール実体</summary>
     [SerializeField]
-    private InfiniteScrollRect _scroll = default;
+    private InfiniteScrollRect scroll = default;
 
     /// <summary>乱数トグル</summary>
     [SerializeField]
-    private Toggle _randomToggle = default;
+    private Toggle randomToggle = default;
 
     /// <summary>垂直トグル</summary>
     [SerializeField]
-    private Toggle _verticalToggle = default;
+    private Toggle verticalToggle = default;
 
     /// <summary>逆順トグル</summary>
     [SerializeField]
-    private Toggle _reverseToggle = default;
+    private Toggle reverseToggle = default;
 
     [SerializeField]
-    private Dropdown _alignDropdown = default;
+    private Dropdown alignDropdown = default;
 
     /// <summary>サイズ制御トグル</summary>
     [SerializeField]
-    private Toggle _ctrlSizeToggle = default;
+    private Toggle ctrlSizeToggle = default;
 
     /// <summary>リセットボタン</summary>
     [SerializeField]
-    private Button _resetButton = default;
+    private Button resetButton = default;
 
     /// <summary>インデックススライダ</summary>
     [SerializeField]
-    private Slider _indexSlider = default;
+    private Slider indexSlider = default;
 
     /// <summary>追加ボタン</summary>
     [SerializeField]
-    private Button _addButton = default;
+    private Button addButton = default;
 
     /// <summary>追加ボタンのラベル</summary>
-    private Text _addButtonLabel;
+    private Text addButtonLabel;
 
     /// <summary>挿入ボタン</summary>
     [SerializeField]
-    private Button _insertButton = default;
+    private Button insertButton = default;
 
     /// <summary>挿入ボタンのラベル</summary>
-    private Text _insertButtonLabel;
+    private Text insertButtonLabel;
 
     /// <summary>除去ボタン</summary>
     [SerializeField]
-    private Button _removeButton = default;
+    private Button removeButton = default;
 
     /// <summary>除去ボタンのラベル</summary>
-    private Text _removeButtonLabel;
+    private Text removeButtonLabel;
 
     /// <summary>指定除去ボタン</summary>
     [SerializeField]
-    private Button _removeCheckedButton = default;
+    private Button removeCheckedButton = default;
 
     /// <summary>全除去ボタン</summary>
     [SerializeField]
-    private Button _clearButton = default;
+    private Button clearButton = default;
 
     /// <summary>デバッグ表示</summary>
     [SerializeField]
-    private Text _debugInfo = default;
+    private Text debugInfo = default;
 
     /// <summary>アイテムの数</summary>
     [SerializeField]
-    private int _numberOfItems = 10;
+    private int numberOfItems = 10;
 
     /// <summary>最初に表示するインデックス</summary>
     [SerializeField]
-    private int _firstIndex = default;
+    private int firstIndex = default;
 
     /// <summary>論理項目リスト</summary>
-    private List<Item> _items;
+    private List<Item> items;
 
     /// <summary>
     /// 初期化
     ///   コントロールの検出と設定
     /// </summary>
     private void Start () {
-        _items = new List<Item> ();
-        _scroll ??= transform.parent.GetComponentInChildren<InfiniteScrollRect> ();
+        items = new List<Item> ();
+        scroll ??= transform.parent.GetComponentInChildren<InfiniteScrollRect> ();
         var toggles = GetComponentsInChildren<Toggle> ();
-        _randomToggle ??= toggles.GetNth (0);
-        _randomToggle?.onValueChanged.AddListener ((isOn) => {
+        randomToggle ??= toggles.GetNth (0);
+        randomToggle?.onValueChanged.AddListener ((isOn) => {
             // 項目内容の変更による項目サイズの即時変更
-            _scroll.ConvertAll (item => (item as Item).Description = $"{(isOn ? RandomSize (_scroll.vertical) : (_scroll.vertical ? 128 : 400))}\n{(item as Item).Description.Replace ('\n', '↵')}");
+            scroll.ConvertAll (item => (item as Item).Description = $"{(isOn ? RandomSize (scroll.vertical) : (scroll.vertical ? 128 : 400))}\n{(item as Item).Description.Replace ('\n', '↵')}");
             Debug.Log ($"ItemSize {(isOn ? "randomized" : "fixed")}");
         });
-        _verticalToggle ??= toggles.GetNth (1);
-        _reverseToggle ??= toggles.GetNth (2);
-        _ctrlSizeToggle ??= toggles.GetNth (3);
-        _ctrlSizeToggle?.onValueChanged.AddListener (isOn => { if (_alignDropdown) { _alignDropdown.interactable = !isOn; } });
-        _alignDropdown ??= GetComponentInChildren<Dropdown> ();
+        verticalToggle ??= toggles.GetNth (1);
+        reverseToggle ??= toggles.GetNth (2);
+        ctrlSizeToggle ??= toggles.GetNth (3);
+        ctrlSizeToggle?.onValueChanged.AddListener (isOn => { if (alignDropdown) { alignDropdown.interactable = !isOn; } });
+        alignDropdown ??= GetComponentInChildren<Dropdown> ();
         var buttons = GetComponentsInChildren<Button> ();
-        _resetButton ??= buttons.GetNth (0);
-        _resetButton?.onClick.AddListener (OnReset);
-        _indexSlider ??= GetComponentInChildren<Slider> ();
-        _addButton ??= buttons.GetNth (1);
-        _addButtonLabel = _addButton?.GetComponentInChildren<Text> ();
-        _addButton?.onClick.AddListener (() => _scroll.Modify ((scroll, items, first, last) => {
+        resetButton ??= buttons.GetNth (0);
+        resetButton?.onClick.AddListener (OnReset);
+        indexSlider ??= GetComponentInChildren<Slider> ();
+        addButton ??= buttons.GetNth (1);
+        addButtonLabel = addButton?.GetComponentInChildren<Text> ();
+        addButton?.onClick.AddListener (() => scroll.Modify ((scroll, items, first, last) => {
             // 追加処理
             var size = RandomSize (scroll.vertical);
             var index = items.Count;
-            items.Add (new Item ($"No. {index}.Add", $"{(_randomToggle.isOn ? $"{size}\n" : "")}Add at {index} / {first} - {last}", label: $"check {index}.Add"));
+            items.Add (new Item ($"No. {index}.Add", $"{(randomToggle.isOn ? $"{size}\n" : "")}Add at {index} / {first} - {last}", label: $"check {index}.Add"));
             Debug.Log ($"Added {items [items.Count - 1]}");
         }));
-        _insertButton ??= buttons.GetNth (2);
-        _insertButtonLabel = _insertButton?.GetComponentInChildren<Text> ();
-        _insertButton?.onClick.AddListener (() => _scroll.Modify ((scroll, items, first, last) => {
+        insertButton ??= buttons.GetNth (2);
+        insertButtonLabel = insertButton?.GetComponentInChildren<Text> ();
+        insertButton?.onClick.AddListener (() => scroll.Modify ((scroll, items, first, last) => {
             // 挿入処理
             var size = RandomSize (scroll.vertical);
-            var index = Mathf.RoundToInt (_indexSlider.value);
-            items.Insert (index, new Item ($"No. {index}.Insert", $"{(_randomToggle.isOn ? $"{size}\n" : "")}Insert at {index} / {first} - {last}", label: $"check {index}.Insert"));
+            var index = Mathf.RoundToInt (indexSlider.value);
+            items.Insert (index, new Item ($"No. {index}.Insert", $"{(randomToggle.isOn ? $"{size}\n" : "")}Insert at {index} / {first} - {last}", label: $"check {index}.Insert"));
             Debug.Log ($"Inserted {items [index]}");
         }));
-        _removeButton ??= buttons.GetNth (3);
-        _removeButtonLabel = _removeButton?.GetComponentInChildren<Text> ();
-        _removeButton?.onClick.AddListener (() => _scroll.Modify ((scroll, items, first, last) => {
+        removeButton ??= buttons.GetNth (3);
+        removeButtonLabel = removeButton?.GetComponentInChildren<Text> ();
+        removeButton?.onClick.AddListener (() => scroll.Modify ((scroll, items, first, last) => {
             // 除去処理
-            var index = Mathf.RoundToInt (_indexSlider.value);
+            var index = Mathf.RoundToInt (indexSlider.value);
             var item = items [index];
             items.RemoveAt (index);
             Debug.Log ($"Removed {item}");
         }));
-        _removeCheckedButton ??= buttons.GetNth (4);
-        _removeCheckedButton?.onClick.AddListener (() => _scroll.Modify ((scroll, items, first, last) => {
+        removeCheckedButton ??= buttons.GetNth (4);
+        removeCheckedButton?.onClick.AddListener (() => scroll.Modify ((scroll, items, first, last) => {
             // 指定除去処理
             var targetItems = items.FindAll (item => ((item as Item)?.Check == true));
             foreach (var item in targetItems) {
@@ -141,55 +141,55 @@ public class InfiniteScrollTest : MonoBehaviour {
             }
             Debug.Log ($"Removed Checked {{{string.Join (", ", targetItems.ConvertAll (i => i.ToString ()))}}}");
         }));
-        _clearButton ??= buttons.GetNth (5);
-        _clearButton?.onClick.AddListener (() => {
+        clearButton ??= buttons.GetNth (5);
+        clearButton?.onClick.AddListener (() => {
             // 全除去処理
-            _scroll.Clear ();
+            scroll.Clear ();
             Debug.Log ($"Removed All");
         });
-        _debugInfo ??= GameObject.Find ("DebugInfo")?.GetComponentInChildren<Text> ();
+        debugInfo ??= GameObject.Find ("DebugInfo")?.GetComponentInChildren<Text> ();
         // リセットボタンを押す
         OnReset ();
     }
 
     /// <summary>更新</summary>
     private void Update () {
-        if (_scroll.Valid) {
-            if (_indexSlider) {
+        if (scroll.Valid) {
+            if (indexSlider) {
                 // 項目数に応じたスライダの制限
-                _indexSlider.maxValue = _scroll.Count > 0 ? _scroll.Count - 1 : 0;
+                indexSlider.maxValue = scroll.Count > 0 ? scroll.Count - 1 : 0;
             }
-            if (_addButtonLabel) {
+            if (addButtonLabel) {
                 // 追加ボタンのインデックス
-                _addButtonLabel.text = $"Add {_scroll.Count}";
+                addButtonLabel.text = $"Add {scroll.Count}";
             }
-            var index = _indexSlider ? Mathf.RoundToInt (_indexSlider.value) : (_scroll.FirstIndex + _scroll.LastIndex) / 2;
-            if (_insertButtonLabel) {
+            var index = indexSlider ? Mathf.RoundToInt (indexSlider.value) : (scroll.FirstIndex + scroll.LastIndex) / 2;
+            if (insertButtonLabel) {
                 // 挿入ボタンのインデックス
-                _insertButtonLabel.text = $"Insert {(index >= 0 ? index : 0)}";
+                insertButtonLabel.text = $"Insert {(index >= 0 ? index : 0)}";
             }
-            if (_removeButtonLabel) {
+            if (removeButtonLabel) {
                 // 除去ボタンのインデックスと活殺
-                _removeButtonLabel.text = _scroll.Count > 0 ? $"Remove {index}" : "Remove";
-                _removeButton.interactable = _scroll.Count > 0;
+                removeButtonLabel.text = scroll.Count > 0 ? $"Remove {index}" : "Remove";
+                removeButton.interactable = scroll.Count > 0;
             }
-            if (_removeCheckedButton) {
+            if (removeCheckedButton) {
                 // 指定除去ボタンの活殺
-                _removeCheckedButton.interactable = _scroll.Count > 0;
+                removeCheckedButton.interactable = scroll.Count > 0;
             }
-            if (_clearButton) {
+            if (clearButton) {
                 // 全除去ボタンの活殺
-                _clearButton.interactable = _scroll.Count > 0;
+                clearButton.interactable = scroll.Count > 0;
             }
-            if (_debugInfo) {
+            if (debugInfo) {
                 // デバッグ情報表示
                 index = 0;
-                _debugInfo.text = $@"viewport: {_scroll.viewport.rect.size}
-content: {_scroll.content.rect.size}
-scroll: {_scroll.Scroll}
-visible: {(_scroll.FirstIndex < 0 ? "no items" : $"{_scroll.FirstIndex} - {_scroll.LastIndex}")}
-{string.Join ("\n", _scroll.ConvertAll (i => 
-                    $"{(index >= _scroll.FirstIndex && index <= _scroll.LastIndex ? "*" : " ")}[{index++}] {Mathf.RoundToInt (i.Position)} - {Mathf.RoundToInt (i.Size)} {((i as Item).Check ? "[x]" : "[ ]")} {(i as Item).Title}"
+                debugInfo.text = $@"viewport: {scroll.viewport.rect.size}
+content: {scroll.content.rect.size}
+scroll: {scroll.Scroll}
+visible: {(scroll.FirstIndex < 0 ? "no items" : $"{scroll.FirstIndex} - {scroll.LastIndex}")}
+{string.Join ("\n", scroll.ConvertAll (i => 
+                    $"{(index >= scroll.FirstIndex && index <= scroll.LastIndex ? "*" : " ")}[{index++}] {Mathf.RoundToInt (i.Position)} - {Mathf.RoundToInt (i.Size)} {((i as Item).Check ? "[x]" : "[ ]")} {(i as Item).Title}"
                 ))}";
             }
         }
@@ -203,23 +203,23 @@ visible: {(_scroll.FirstIndex < 0 ? "no items" : $"{_scroll.FirstIndex} - {_scro
 
     /// <summary>リセットボタン</summary>
     public void OnReset () {
-        _items.Clear ();
+        items.Clear ();
         // 生成
-        if (_numberOfItems <= 0) {
-            _numberOfItems = 10;
+        if (numberOfItems <= 0) {
+            numberOfItems = 10;
         }
-        for (var i = 0; i < _numberOfItems; i++) {
-            _scroll.horizontal = !(_scroll.vertical = _verticalToggle.isOn);
-            _scroll.m_reverseArrangement = _reverseToggle.isOn;
-            _scroll.m_controlChildSize = _ctrlSizeToggle.isOn;
-            _scroll.m_childAlignment = _alignDict [_alignDropdown.value];
-            _items.Add (new Item ($"No. {i}", $"{(_randomToggle.isOn ? $"{RandomSize (_scroll.vertical)}\n" : "")}start of {i}\nend of {i}", label: $"check {i}"));
+        for (var i = 0; i < numberOfItems; i++) {
+            scroll.horizontal = !(scroll.vertical = verticalToggle.isOn);
+            scroll.reverseArrangement = reverseToggle.isOn;
+            scroll.controlChildSize = ctrlSizeToggle.isOn;
+            scroll.childAlignment = _alignDict [alignDropdown.value];
+            items.Add (new Item ($"No. {i}", $"{(randomToggle.isOn ? $"{RandomSize (scroll.vertical)}\n" : "")}start of {i}\nend of {i}", label: $"check {i}"));
         }
-        if (_firstIndex < 0 || _firstIndex >= _numberOfItems) {
-            _firstIndex = 0;
+        if (firstIndex < 0 || firstIndex >= numberOfItems) {
+            firstIndex = 0;
         }
-        _scroll.Initialize (_items, _firstIndex);
-        Debug.Log ($"Initialized {{{string.Join (", ", _scroll.ConvertAll (i => i.ToString ()))}}}");
+        scroll.Initialize (items, firstIndex);
+        Debug.Log ($"Initialized {{{string.Join (", ", scroll.ConvertAll (i => i.ToString ()))}}}");
     }
 
 }

@@ -45,16 +45,16 @@ namespace InfiniteScroll {
         public virtual InfiniteScrollRect ScrollRect { get; protected set; }
 
         /// <summary>項目のパディング</summary>
-        protected virtual RectOffset m_padding => ScrollRect.m_padding;
+        protected virtual RectOffset padding => ScrollRect.padding;
 
         /// <summary>項目のサイズを制御</summary>
-        protected virtual bool m_controlChildSize => ScrollRect.m_controlChildSize;
+        protected virtual bool controlChildSize => ScrollRect.controlChildSize;
 
         /// <summary>項目の配向</summary>
-        protected virtual TextAnchor m_childAlignment => ScrollRect.m_childAlignment;
+        protected virtual TextAnchor childAlignment => ScrollRect.childAlignment;
 
         /// <summary>逆並び</summary>
-        protected virtual bool m_reverseArrangement => ScrollRect.m_reverseArrangement;
+        protected virtual bool reverseArrangement => ScrollRect.reverseArrangement;
 
         /// <summary>スクロールの向き 垂直/!水平</summary>
         protected virtual bool vertical => ScrollRect.vertical;
@@ -106,10 +106,10 @@ namespace InfiniteScroll {
 
         /// <summary>物理項目のサイズを確定し論理項目に反映する</summary>
         protected internal virtual void SetSize (bool calibration = false) {
-            if (m_controlChildSize) {
+            if (controlChildSize) {
                 RectTransform.sizeDelta = vertical
-                    ? new Vector2 (viewportRect.size.x - m_padding.left - m_padding.right, RectTransform.sizeDelta.y)
-                    : new Vector2 (RectTransform.sizeDelta.x, viewportRect.size.y - m_padding.top - m_padding.bottom);
+                    ? new Vector2 (viewportRect.size.x - padding.left - padding.right, RectTransform.sizeDelta.y)
+                    : new Vector2 (RectTransform.sizeDelta.x, viewportRect.size.y - padding.top - padding.bottom);
             }
             if (calibration) {
                 for (var i = 0; i < MaxNumberOfLayoutRebuilds; i++) {
@@ -126,16 +126,16 @@ namespace InfiniteScroll {
 
         /// <summary>項目の位置決め</summary>
         protected internal virtual void SetPosition (float pos) {
-            pos *= (vertical == m_reverseArrangement) ? 1f : -1f;
+            pos *= (vertical == reverseArrangement) ? 1f : -1f;
             Vector2 anchor;
             Vector2 anchoredPosition;
-            if (m_reverseArrangement) {
-                switch (m_childAlignment) {
+            if (reverseArrangement) {
+                switch (childAlignment) {
                     case TextAnchor.UpperRight:
                         anchor.x = vertical ? 1f : 1f;
                         anchor.y = vertical ? 0f : 1f;
-                        anchoredPosition.x = vertical ? -m_padding.right : pos;
-                        anchoredPosition.y = vertical ? pos : -m_padding.top;
+                        anchoredPosition.x = vertical ? -padding.right : pos;
+                        anchoredPosition.y = vertical ? pos : -padding.top;
                         break;
                     case TextAnchor.MiddleCenter:
                         anchor.x = vertical ? 0.5f : 1f;
@@ -146,8 +146,8 @@ namespace InfiniteScroll {
                     case TextAnchor.LowerLeft:
                         anchor.x = vertical ? 0f : 1f;
                         anchor.y = vertical ? 0f : 0f;
-                        anchoredPosition.x = vertical ? m_padding.left : pos;
-                        anchoredPosition.y = vertical ? pos : m_padding.bottom;
+                        anchoredPosition.x = vertical ? padding.left : pos;
+                        anchoredPosition.y = vertical ? pos : padding.bottom;
                         break;
                     default:
                         anchor.x = 1f;
@@ -157,12 +157,12 @@ namespace InfiniteScroll {
                         break;
                 }
             } else {
-                switch (m_childAlignment) {
+                switch (childAlignment) {
                     case TextAnchor.UpperRight:
                         anchor.x = vertical ? 1f : 0f;
                         anchor.y = vertical ? 1f : 1f;
-                        anchoredPosition.x = vertical ? -m_padding.right : pos;
-                        anchoredPosition.y = vertical ? pos : -m_padding.top;
+                        anchoredPosition.x = vertical ? -padding.right : pos;
+                        anchoredPosition.y = vertical ? pos : -padding.top;
                         break;
                     case TextAnchor.MiddleCenter:
                         anchor.x = vertical ? 0.5f : 0f;
@@ -173,8 +173,8 @@ namespace InfiniteScroll {
                     case TextAnchor.LowerLeft:
                         anchor.x = vertical ? 0f : 0f;
                         anchor.y = vertical ? 1f : 0f;
-                        anchoredPosition.x = vertical ? m_padding.left : pos;
-                        anchoredPosition.y = vertical ? pos : m_padding.bottom;
+                        anchoredPosition.x = vertical ? padding.left : pos;
+                        anchoredPosition.y = vertical ? pos : padding.bottom;
                         break;
                     default:
                         anchor.x = 0f;

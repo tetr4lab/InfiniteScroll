@@ -15,27 +15,27 @@ namespace InfiniteScroll {
 
         /// <summary>項目の外縁</summary>
         [SerializeField]
-        public RectOffset m_padding = new RectOffset ();
+        public RectOffset padding = new RectOffset ();
 
         /// <summary>項目の隙間</summary>
         [SerializeField]
-        public float m_spacing = 0;
+        public float spacing = 0;
 
         /// <summary>項目の配向</summary>
         [SerializeField]
-        public TextAnchor m_childAlignment = TextAnchor.LowerLeft;
+        public TextAnchor childAlignment = TextAnchor.LowerLeft;
 
         /// <summary>項目の逆順</summary>
         [SerializeField]
-        public bool m_reverseArrangement = false;
+        public bool reverseArrangement = false;
 
         /// <summary>項目の拡縮</summary>
         [SerializeField]
-        public bool m_controlChildSize = false;
+        public bool controlChildSize = false;
 
         /// <summary>項目の標準サイズ</summary>
         [SerializeField, Range (0f, float.MaxValue)]
-        public float m_standardItemSize = 100f;
+        public float standardItemSize = 100f;
 
         /// <summary>有効</summary>
         public virtual bool Valid => Items != null && Components != null;
@@ -66,7 +66,7 @@ namespace InfiniteScroll {
             get => _averageItemSize;
             set {
                 if (value <= 0) {
-                    _averageItemSize = m_standardItemSize;
+                    _averageItemSize = standardItemSize;
                     _averageItemCount = 0;
                 } else {
                     _averageItemSize = (_averageItemSize * _averageItemCount + value) / ++_averageItemCount;
@@ -92,7 +92,7 @@ namespace InfiniteScroll {
         public virtual float ViewportSize => vertical ? viewport.rect.height : viewport.rect.width;
 
         /// <summary>前回のビューポートサイズ</summary>
-        protected Vector2 _lastViewportSize;
+        protected Vector2 lastViewportSize;
 
         /// <summary>スクロール方向のコンテントサイズ</summary>
         public virtual float ContentSize {
@@ -166,14 +166,14 @@ namespace InfiniteScroll {
             Clear (true);
             // 配置
             if (vertical) {
-                var y = m_reverseArrangement ? 0f : 1f;
+                var y = reverseArrangement ? 0f : 1f;
                 content.anchorMin = new Vector2 (0f, y);
                 content.anchorMax = new Vector2 (1f, y);
                 content.pivot = new Vector2 (0.5f, y);
                 content.offsetMin = Vector2.zero;
                 content.offsetMax = Vector2.zero;
             } else {
-                var x = m_reverseArrangement ? 1f : 0f;
+                var x = reverseArrangement ? 1f : 0f;
                 content.anchorMin = new Vector2 (x, 0f);
                 content.anchorMax = new Vector2 (x, 1f);
                 content.pivot = new Vector2 (x, 0.5f);
@@ -196,11 +196,11 @@ namespace InfiniteScroll {
         /// <param name="point">基準項目とオフセットのタプル</param>
         public virtual void SetScroll ((IInfiniteScrollItem item, float offset) point) {
             if (point.item == null || !Items.Contains (point.item)) {
-                Scroll = (vertical == m_reverseArrangement) ? 0f : 1f;
+                Scroll = (vertical == reverseArrangement) ? 0f : 1f;
                 return;
             }
             var scroll = (point.item.Position + point.offset) / (ContentSize - ViewportSize);
-            Scroll = (vertical == m_reverseArrangement) ? scroll : 1f - scroll;
+            Scroll = (vertical == reverseArrangement) ? scroll : 1f - scroll;
         }
 
 
@@ -212,7 +212,7 @@ namespace InfiniteScroll {
             if (index < 0 || index >= Items.Count) {
                 index = Mathf.Clamp ((FirstIndex + LastIndex) / 2, 0, Items.Count - 1);
             }
-            var offset = ContentSize < ViewportSize ? 0f : (vertical == m_reverseArrangement ? Scroll : 1f - Scroll) * (ContentSize - ViewportSize);
+            var offset = ContentSize < ViewportSize ? 0f : (vertical == reverseArrangement ? Scroll : 1f - Scroll) * (ContentSize - ViewportSize);
             return (Items [index], offset - Items [index].Position);
         }
 
@@ -226,7 +226,7 @@ namespace InfiniteScroll {
                 }
             }
             // 論理項目の位置を算出
-            float pos = m_reverseArrangement ? (vertical ? m_padding.bottom : m_padding.right) : (vertical ? m_padding.top : m_padding.left);
+            float pos = reverseArrangement ? (vertical ? padding.bottom : padding.right) : (vertical ? padding.top : padding.left);
             for (var i = 0; i < Items.Count; i++) {
                 if (Items [i].Position != pos) {
                     Items [i].Position = pos;
@@ -234,9 +234,9 @@ namespace InfiniteScroll {
                 if (Items [i].Size <= 0) {
                     Items [i].Size = AverageItemSize;
                 }
-                pos += Items [i].Size + m_spacing;
+                pos += Items [i].Size + spacing;
             }
-            pos += m_reverseArrangement ? (vertical ? m_padding.top : m_padding.left) : (vertical ? m_padding.bottom : m_padding.right);
+            pos += reverseArrangement ? (vertical ? padding.top : padding.left) : (vertical ? padding.bottom : padding.right);
             ContentSize = pos;
             // 物理項目に位置を反映
             foreach (var component in Components) {
@@ -289,7 +289,7 @@ namespace InfiniteScroll {
                     if (Items [i].Size <= 0) {
                         Items [i].Size = AverageItemSize;
                     }
-                    pos += Items [i].Size + m_spacing;
+                    pos += Items [i].Size + spacing;
                     if (pos > ViewportSize) {
                         // 可視端への到達
                         LastIndex = i;
@@ -300,7 +300,7 @@ namespace InfiniteScroll {
 
         /// <summary>可視範囲の変化に追従</summary>
         protected virtual void FolowVisibleRange () {
-            var top = (vertical == m_reverseArrangement ? Scroll : 1f - Scroll) * (ContentSize - ViewportSize);
+            var top = (vertical == reverseArrangement ? Scroll : 1f - Scroll) * (ContentSize - ViewportSize);
             var bottom = top + ViewportSize;
             var first = -1;
             var last = -1;
@@ -330,14 +330,14 @@ namespace InfiniteScroll {
                     CalculatePositions ();
                     SetScroll (locked);
                     ResizeRequest = false;
-                } else if (_lastViewportSize != viewport.rect.size) {
+                } else if (lastViewportSize != viewport.rect.size) {
                     // ビューポートサイズの変化に追従してサイズ校正
                     foreach (var component in Components) {
                         if (component.Index >= 0) {
                             component.SetSize ();
                         }
                     }
-                    _lastViewportSize = viewport.rect.size;
+                    lastViewportSize = viewport.rect.size;
                 }
                 FolowVisibleRange ();
             }
