@@ -80,14 +80,14 @@ public class InfiniteScrollTest : MonoBehaviour {
     private int firstIndex = default;
 
     /// <summary>論理項目リスト</summary>
-    private List<Item> items;
+    private List<IInfiniteScrollItem> items;
 
     /// <summary>
     /// 初期化
     ///   コントロールの検出と設定
     /// </summary>
     private void Start () {
-        items = new List<Item> ();
+        items = new List<IInfiniteScrollItem> ();
         scroll ??= transform.parent.GetComponentInChildren<InfiniteScrollRect> ();
         var toggles = GetComponentsInChildren<Toggle> ();
         randomToggle ??= toggles.GetNth (0);
