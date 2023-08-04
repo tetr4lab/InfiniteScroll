@@ -11,7 +11,7 @@ using UnityEngine.UI;
 
 namespace InfiniteScroll {
 
-    /// <summary>無限スクロールレクトのカスタムエディタ</summary>
+    /// <summary>仮想スクロールレクトのカスタムエディタ</summary>
     [CanEditMultipleObjects, CustomEditor (typeof (InfiniteScrollRect), true)]
     public class InfiniteScrollEditor : ScrollRectEditor {
 

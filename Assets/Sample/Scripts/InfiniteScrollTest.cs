@@ -4,10 +4,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using InfiniteScroll;
 
-/// <summary>無限スクロールサンプルメイン</summary>
+/// <summary>仮想スクロールサンプルメイン</summary>
 public class InfiniteScrollTest : MonoBehaviour {
 
-    /// <summary>無限スクロール実体</summary>
+    /// <summary>仮想スクロール実体</summary>
     [SerializeField]
     private InfiniteScrollRect scroll = default;
 

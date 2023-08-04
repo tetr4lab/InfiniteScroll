@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace InfiniteScroll {
 
-    /// <summary>無限スクロールレクト</summary>
+    /// <summary>仮想スクロールレクト</summary>
     [AddComponentMenu ("UI/Infinite Scroll Rect", 38)]
     [DisallowMultipleComponent]
     [RequireComponent (typeof (RectTransform))]

@@ -1,5 +1,5 @@
 ---
-title: Unity シンプルな無限スクロール (uGUI)
+title: Unity シンプルな仮想スクロール (uGUI)
 tags: Unity C# uGUI
 ---
 # 概要
@@ -22,8 +22,8 @@ tags: Unity C# uGUI
 - Windows 11
 
 ## アセットパッケージ
-- [InfiniteScrollRect](./InfiniteScrollRect.unitypackage?raw=true) 無限スクロールの本体
-- [InfiniteScrollSample](./InfiniteScrollSample.unitypackage?raw=true) 無限スクロールの使用例
+- [InfiniteScrollRect](./InfiniteScrollRect.unitypackage?raw=true) 仮想スクロールの本体
+- [InfiniteScrollSample](./InfiniteScrollSample.unitypackage?raw=true) 仮想スクロールの使用例
 
 ## 機能
 - リスト(`IEnumerable<IInfiniteScrollItem>`)の登録と初期化
