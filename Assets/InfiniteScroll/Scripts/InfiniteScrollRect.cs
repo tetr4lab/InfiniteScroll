@@ -172,6 +172,10 @@ namespace InfiniteScroll {
                 content.pivot = new Vector2 (0.5f, y);
                 content.offsetMin = Vector2.zero;
                 content.offsetMax = Vector2.zero;
+#if UNITY_2022_1_OR_NEWER
+                // インスペクタで許可されていない方向のスクロールバーにリスナーが設定されなくなったため、動的な切り替え時に再設定する
+                verticalScrollbar = verticalScrollbar;
+#endif
             } else {
                 var x = reverseArrangement ? 1f : 0f;
                 content.anchorMin = new Vector2 (x, 0f);
@@ -179,6 +183,10 @@ namespace InfiniteScroll {
                 content.pivot = new Vector2 (x, 0.5f);
                 content.offsetMin = Vector2.zero;
                 content.offsetMax = Vector2.zero;
+#if UNITY_2022_1_OR_NEWER
+                // インスペクタで許可されていない方向のスクロールバーにリスナーが設定されなくなったため、動的な切り替え時に再設定する
+                horizontalScrollbar = horizontalScrollbar;
+#endif
             }
             LayoutRebuilder.ForceRebuildLayoutImmediate (transform as RectTransform);
             // 生成
