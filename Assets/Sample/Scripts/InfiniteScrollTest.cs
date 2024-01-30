@@ -208,18 +208,18 @@ visible: {(scroll.FirstIndex < 0 ? "no items" : $"{scroll.FirstIndex} - {scroll.
         if (numberOfItems <= 0) {
             numberOfItems = 10;
         }
+        scroll.horizontal = !(scroll.vertical = verticalToggle.isOn);
+        scroll.reverseArrangement = reverseToggle.isOn;
+        scroll.controlChildSize = ctrlSizeToggle.isOn;
+        scroll.childAlignment = _alignDict [alignDropdown.value];
         for (var i = 0; i < numberOfItems; i++) {
-            scroll.horizontal = !(scroll.vertical = verticalToggle.isOn);
-            scroll.reverseArrangement = reverseToggle.isOn;
-            scroll.controlChildSize = ctrlSizeToggle.isOn;
-            scroll.childAlignment = _alignDict [alignDropdown.value];
             items.Add (new Item ($"No. {i}", $"{(randomToggle.isOn ? $"{RandomSize (scroll.vertical)}\n" : "")}start of {i}\nend of {i}", label: $"check {i}"));
         }
         if (firstIndex < 0 || firstIndex >= numberOfItems) {
             firstIndex = 0;
         }
         scroll.Initialize (items, firstIndex);
-        Debug.Log ($"Initialized {{{string.Join (", ", scroll.ConvertAll (i => i.ToString ()))}}}");
+        Debug.Log ($"Initialized h={scroll.horizontal}, v={scroll.vertical}, r={scroll.reverseArrangement}, s={scroll.controlChildSize}, a={scroll.childAlignment}, {{{string.Join (", ", scroll.ConvertAll (i => i.ToString ()))}}}");
     }
 
 }
