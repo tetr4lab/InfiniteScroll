@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using InfiniteScroll;
+using Tetr4lab.InfiniteScroll;
+using TextAnchor = Tetr4lab.InfiniteScroll.TextAnchor;
 
 /// <summary>仮想スクロールサンプルメイン</summary>
 public class InfiniteScrollTest : MonoBehaviour {
@@ -199,7 +200,7 @@ visible: {(scroll.FirstIndex < 0 ? "no items" : $"{scroll.FirstIndex} - {scroll.
     private float RandomSize (bool vertical) => (vertical ? 128 : 400) + Random.Range (0, 5) * 40;
 
     /// <summary>ドロップダウンからenumを得る変換辞書</summary>
-    private static readonly Dictionary<int, InfiniteScroll.TextAnchor> _alignDict = new Dictionary<int, InfiniteScroll.TextAnchor> { { 0, InfiniteScroll.TextAnchor.LowerLeft }, { 1, InfiniteScroll.TextAnchor.MiddleCenter }, { 2, InfiniteScroll.TextAnchor.UpperRight }, };
+    private static readonly Dictionary<int, TextAnchor> _alignDict = new Dictionary<int, TextAnchor> { { 0, TextAnchor.LowerLeft }, { 1, TextAnchor.MiddleCenter }, { 2, TextAnchor.UpperRight }, };
 
     /// <summary>リセットボタン</summary>
     public void OnReset () {

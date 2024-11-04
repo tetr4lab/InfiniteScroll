@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace InfiniteScroll {
+namespace Tetr4lab.InfiniteScroll {
 
     /// <summary>
     /// 論理項目(インターフェイス)

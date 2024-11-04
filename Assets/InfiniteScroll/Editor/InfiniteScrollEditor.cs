@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace InfiniteScroll {
+namespace Tetr4lab.InfiniteScroll {
 
     /// <summary>仮想スクロールレクトのカスタムエディタ</summary>
     [CanEditMultipleObjects, CustomEditor (typeof (InfiniteScrollRect), true)]
