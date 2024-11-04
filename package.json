@@ -1,6 +1,6 @@
 {
-    "name": "org.tetr4lab.InfiniteScroll",
-    "version": "1.0.0",
+    "name": "org.tetr4lab.infinitescroll",
+    "version": "1.0.1",
     "displayName": "InfiniteScroll",
     "description": "Yet another VirtualScroll View for Unity UI (uGUI)",
     "unity": "2021.3",
@@ -8,6 +8,7 @@
     "licenses": "MIT",
     "dependencies": {},
     "keywords": [
+        "uGUI",
         "Scroll",
         "VirtualScroll"
     ],
