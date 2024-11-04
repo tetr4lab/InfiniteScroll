@@ -1,0 +1,20 @@
+{
+    "name": "org.tetr4lab.infinitescroll",
+    "version": "1.0.0",
+    "displayName": "InfiniteScroll",
+    "description": "Yet another VirtualScroll View for Unity UI (uGUI)",
+    "unity": "2021.3",
+    "documentationUrl": "https://github.com/tetr4lab/InfiniteScroll/",
+    "licenses": "MIT",
+    "dependencies": {},
+    "keywords": [
+        "uGUI",
+        "Scroll",
+        "VirtualScroll"
+    ],
+    "author": {
+        "name": "tetr4lab.",
+        "email": "info@tetr4lab.org",
+        "url": "https://tetr4lab.org/"
+    }
+}
