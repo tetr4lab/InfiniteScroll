@@ -18,12 +18,14 @@ tags: Unity C# uGUI
   - ~~動的に生成される不定長のリストを自動的にスクロールする。~~
 
 ## テスト環境
-- Unity 2022.3.18f1
+- Unity 2022.3.51f1
 - Windows 11
 
-## アセットパッケージ
-- [InfiniteScrollRect](./InfiniteScrollRect.unitypackage?raw=true) 仮想スクロールの本体
-- [InfiniteScrollSample](./InfiniteScrollSample.unitypackage?raw=true) 仮想スクロールの使用例
+## 導入
+- `Package Manager`で`Add package from git URL...`から、以下のURLを入力します。
+```
+https://github.com/tetr4lab/InfiniteScroll.git?path=/Assets/InfiniteScroll
+```
 
 ## 機能
 - リスト(`IEnumerable<IInfiniteScrollItem>`)の登録と初期化
