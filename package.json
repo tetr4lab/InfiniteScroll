@@ -1,6 +1,6 @@
 {
     "name": "org.tetr4lab.infinitescroll",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "displayName": "InfiniteScroll",
     "description": "Yet another VirtualScroll View for Unity UI (uGUI)",
     "unity": "2021.3",
@@ -17,6 +17,7 @@
         "email": "info@tetr4lab.org",
         "url": "https://tetr4lab.org/"
     },
+    "workspaces": [ "./Assets/InfiniteScroll/*" ],
     "files": [
         "/Assets.meta",
         "/Assets/InfiniteScroll.meta",
