@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+using System;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
@@ -111,3 +112,4 @@ namespace Tetr4lab.InfiniteScroll {
     }
 
 }
+#endif
