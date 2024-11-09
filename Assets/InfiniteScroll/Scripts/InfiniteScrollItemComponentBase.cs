@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Tetr4lab.InfiniteScroll {
+namespace Tetr4lab.UI {
 
     /// <summary>
     /// 物理項目(抽象クラス)

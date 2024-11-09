@@ -26,6 +26,10 @@ tags: Unity C# uGUI
 ```
 https://github.com/tetr4lab/InfiniteScroll.git?path=/Assets/InfiniteScroll
 ```
+- 必要に応じて、以下の名前空間を導入してください。
+```csharp
+using Tetr4lab.UI;
+```
 
 ## 機能
 - リスト(`IEnumerable<IInfiniteScrollItem>`)の登録と初期化

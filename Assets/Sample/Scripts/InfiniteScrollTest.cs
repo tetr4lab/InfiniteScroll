@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using Tetr4lab.InfiniteScroll;
-using TextAnchor = Tetr4lab.InfiniteScroll.TextAnchor;
+using Tetr4lab.UI;
+using TextAnchor = Tetr4lab.UI.TextAnchor;
 
 /// <summary>仮想スクロールサンプルメイン</summary>
 public class InfiniteScrollTest : MonoBehaviour {
