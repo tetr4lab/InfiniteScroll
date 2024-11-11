@@ -1,4 +1,4 @@
-﻿using Tetr4lab.UI;
+﻿using Tetr4lab.UnityEngine.UI;
 using UnityEngine;
 using UnityEngine.UI;
 

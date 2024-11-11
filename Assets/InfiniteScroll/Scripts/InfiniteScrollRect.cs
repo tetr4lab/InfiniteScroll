@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Tetr4lab.UI {
+namespace Tetr4lab.UnityEngine.UI {
 
     /// <summary>仮想スクロールレクト</summary>
     [AddComponentMenu ("UI/Infinite Scroll Rect", 38)]

@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Tetr4lab.UI {
+namespace Tetr4lab.UnityEngine.UI {
 
     /// <summary>
     /// 論理項目(インターフェイス)

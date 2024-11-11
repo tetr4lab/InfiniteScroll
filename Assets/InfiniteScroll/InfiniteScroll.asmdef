@@ -1,6 +1,6 @@
 {
-    "name": "org.tetr4lab.infinitescroll",
-    "rootNamespace": "Tetr4lab.UI",
+    "name": "org.tetr4lab.unity.infinitescroll",
+    "rootNamespace": "Tetr4lab.UnityEngine.UI",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

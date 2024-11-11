@@ -1,5 +1,5 @@
 {
-    "name": "org.tetr4lab.infinitescroll",
+    "name": "org.tetr4lab.unity.infinitescroll",
     "version": "1.0.0",
     "displayName": "InfiniteScroll",
     "description": "Yet another VirtualScroll View for Unity UI (uGUI)",
